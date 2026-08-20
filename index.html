@@ -23,7 +23,7 @@
       --danger-text: #7f1d1d;
       
       /* 值班專屬底色 */
-      --duty-primary-bg: #fef9c3;   /* 一線值班：柔和淺黃 */
+      --duty-primary-bg: #fef9c3;   /* 一線值班 / 1.5T：柔和淺黃 */
       --duty-secondary-bg: #e0f2fe; /* 二線值班：清爽淺藍 */
     }
     * {
@@ -206,7 +206,7 @@
       font-weight: bold;
     }
 
-    /* 🌟 值班專屬格子底色樣式 */
+    /* 值班專屬格子底色樣式 */
     .duty-cell-primary {
       background-color: var(--duty-primary-bg) !important;
     }
@@ -353,7 +353,7 @@
       <h1>醫學影像排班與休假系統</h1>
       <div class="rule-badges">
         <span class="rule-badge badge-cloud" id="syncStatus">⚡ Firebase 即時連線中</span>
-        <span class="rule-badge badge-duty-1">🟡 一線值班(淺黃底)</span>
+        <span class="rule-badge badge-duty-1">🟡 一線值班/1.5T(淺黃底)</span>
         <span class="rule-badge badge-duty-2">🔵 二線值班(淺藍底)</span>
         <span class="rule-badge badge-ct">CT崗位月輪序</span>
         <span class="rule-badge badge-mri">MRI每週輪替</span>
@@ -449,10 +449,11 @@
     const BASE_CT_DUTY_DATE = new Date(2026, 7, 3);
 
     const MRI_MEMBERS = ["碰", "任", "揮荃", "佳", "忠", "阿文"];
+    // 1.5T 週一至五班別為 8-4C4-8
     const MRI_WEEK_ROLES = [
       { pos: "1.5S", shift: "8C16C08" },
       { pos: "1.5S小夜", shift: "15C23C8" },
-      { pos: "1.5T", shift: "8H5on8" },
+      { pos: "1.5T", shift: "8-4C4-8" },
       { pos: "3T", shift: "8C16C08" },
       { pos: "1.5小夜", shift: "15C23C8" },
       { pos: "支援二", shift: "8H17C08" }
@@ -722,7 +723,6 @@
           posLabel.id = `pos_${m.id}_${day}`;
           posLabel.textContent = posText;
 
-          // 🌟 判斷值班底色與標籤樣式
           let labelClass = "pos-label";
           if (posText.includes("一線") || posText.includes("1.5T")) {
             labelClass += " pos-label-duty-1";
@@ -996,7 +996,7 @@
       }
     }
 
-    // ⚡ 自動排班邏輯更新（含底色套用）
+    // ⚡ 自動排班邏輯
     function autoGenerateRoster() {
       const year = parseInt(yearSelect.value);
       const month = parseInt(monthSelect.value);
@@ -1032,9 +1032,11 @@
 
             if (!alreadyOff) {
               if (weekDay >= 1 && weekDay <= 5) {
+                // 週一至週五正常輪替班別（1.5T 為 8-4C4-8）
                 select.value = currentRole.shift;
                 select.className = `shift-select shift-${currentRole.shift}`;
               } else if (weekDay === 6) {
+                // 週六：1.5T 為 8-4C4-8；支援二為 8H17C08；其餘 OFF
                 if (currentRole.pos === "1.5T") {
                   select.value = "8-4C4-8";
                   select.className = "shift-select shift-8-4C4-8";
@@ -1046,6 +1048,7 @@
                   select.className = "shift-select shift-OFF";
                 }
               } else if (weekDay === 0) {
+                // 週日：1.5T 為 C8C8C24；其餘 OFF
                 if (currentRole.pos === "1.5T") {
                   select.value = "C8C8C24";
                   select.className = "shift-select shift-C8C8C24";
@@ -1116,7 +1119,7 @@
       saveData();
       renderLeaveBody();
       updateAllStats();
-      alert(`已成功帶入 ${year} 年 ${month} 月輪值（已標記一線淺黃、二線淺藍值班底色）！`);
+      alert(`已成功帶入 ${year} 年 ${month} 月輪值（1.5T 已修正為平日 8-4C4-8、六 8-4C4-8、日 C8C8C24）！`);
     }
 
     function saveData() {
