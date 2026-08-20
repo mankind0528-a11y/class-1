@@ -258,6 +258,80 @@
     .stat-col { background-color: #f8fafc; font-weight: bold; min-width: 55px; }
     .stat-off { color: #dc2626; }
     .total-row { background-color: #f1f5f9; font-weight: bold; }
+
+    /* ============================================================== */
+    /* 🖥️ 電腦版螢幕專用優化 (寬度 >= 1024px 時自動放大，手機版不變) */
+    /* ============================================================== */
+    @media (min-width: 1024px) {
+      body {
+        padding: 20px 24px;
+      }
+      .header-panel {
+        padding: 16px 24px;
+      }
+      .title-area h1 {
+        font-size: 1.6rem;
+      }
+      .rule-badge {
+        font-size: 12px;
+        padding: 4px 10px;
+      }
+      select, button, input {
+        padding: 8px 12px;
+        font-size: 14px;
+      }
+      .tab-btn {
+        padding: 12px 26px;
+        font-size: 15px;
+      }
+      table {
+        min-width: 2300px; /* 電腦版展開更寬，完整顯示代碼不被擠壓 */
+        font-size: 14px;
+      }
+      th, td {
+        padding: 6px 3px;
+      }
+      thead tr:nth-child(1) th {
+        height: 36px;
+        font-size: 14px;
+      }
+      thead tr:nth-child(2) th {
+        height: 30px;
+        font-size: 13px;
+      }
+      .col-name {
+        width: 105px !important;
+        min-width: 105px !important;
+        font-size: 14px;
+      }
+      .col-name input {
+        font-size: 14px !important;
+        padding: 4px 6px !important;
+      }
+      .col-group {
+        left: 105px !important;
+        width: 120px !important;
+        min-width: 120px !important;
+        font-size: 13px !important;
+      }
+      .pos-label {
+        font-size: 11px;
+        padding: 2px 4px;
+      }
+      .shift-select {
+        font-size: 13px;
+        padding: 3px 2px;
+        min-width: 72px; /* 確保 8C16C08 等完整字樣清楚可見 */
+      }
+      .stat-col {
+        min-width: 70px;
+        font-size: 14px;
+      }
+      .leave-cell {
+        height: 42px;
+        font-size: 14px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -337,7 +411,7 @@
 
   <script>
     // -------------------------------------------------------------
-    // 🔥 Firebase 設定（已帶入你的專案 anwen-8b2fd）
+    // 🔥 Firebase 設定（專案 anwen-8b2fd）
     // -------------------------------------------------------------
     const firebaseConfig = {
       apiKey: "AIzaSyADWikxpfwUIvDGwntKqu8G-16Pt456HPY",
@@ -560,7 +634,7 @@
       }
     }
 
-    // ⚡ 監聽 Firebase 資料庫變化（真正即時連線）
+    // ⚡ 監聽 Firebase 資料庫變化
     function listenToFirebaseData() {
       const year = parseInt(yearSelect.value);
       const month = parseInt(monthSelect.value);
@@ -602,7 +676,7 @@
         tdName.className = "col-name";
         const nameInput = document.createElement("input");
         nameInput.value = savedData[`name_${m.id}`] || m.name;
-        nameInput.style.width = "70px";
+        nameInput.style.width = "88px";
         nameInput.onchange = () => { saveData(); renderLeaveBody(); };
         tdName.appendChild(nameInput);
         tr.appendChild(tdName);
@@ -946,7 +1020,6 @@
       alert(`已成功帶入 ${year} 年 ${month} 月輪值（已同步儲存至 Firebase）！`);
     }
 
-    // ⚡ 儲存至 Firebase
     function saveData() {
       const year = parseInt(yearSelect.value);
       const month = parseInt(monthSelect.value);
