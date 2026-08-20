@@ -41,7 +41,7 @@
       padding: 14px 20px;
       border-radius: 8px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      margin-bottom: 12px;
+      margin-bottom: 8px;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
@@ -71,6 +71,39 @@
     .badge-duty-2 { background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; font-weight: bold; }
     .badge-limit { background: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
     .badge-cloud { background: #dcfce7; color: #15803d; border: 1px solid #86efac; font-weight: bold; }
+    .badge-cycle-red { background: #fff1f2; color: #be123c; border: 1px solid #f43f5e; font-weight: bold; }
+    .badge-cycle-blue { background: #f0f9ff; color: #0369a1; border: 1px solid #38bdf8; font-weight: bold; }
+
+    /* 變形工時週期資訊橫條 */
+    .cycle-info-bar {
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      color: #334155;
+      padding: 8px 16px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .cycle-item-red {
+      background: #fff1f2;
+      border: 1px solid #f43f5e;
+      color: #9f1239;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+    .cycle-item-blue {
+      background: #f0f9ff;
+      border: 1px solid #38bdf8;
+      color: #0369a1;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
     
     .controls {
       display: flex;
@@ -129,13 +162,13 @@
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
       overflow: auto;
       border: 1px solid var(--border-color);
-      max-height: calc(100vh - 170px);
+      max-height: calc(100vh - 210px);
     }
     table {
       border-collapse: separate;
       border-spacing: 0;
       width: 100%;
-      min-width: 1800px;
+      min-width: 1950px;
       text-align: center;
       font-size: 12px;
     }
@@ -146,18 +179,27 @@
       white-space: nowrap;
     }
 
-    /* 頂部日期與星期列固定 */
+    /* 頂部固定列：第1列(週期膠囊)、第2列(日期)、第3列(星期) */
     thead tr:nth-child(1) th {
       position: sticky;
       top: 0;
+      z-index: 25;
+      background-color: #f1f5f9;
+      font-weight: bold;
+      height: 28px;
+      padding: 2px 4px;
+    }
+    thead tr:nth-child(2) th {
+      position: sticky;
+      top: 28px;
       z-index: 20;
       background-color: #e2e8f0;
       font-weight: 600;
       height: 28px;
     }
-    thead tr:nth-child(2) th {
+    thead tr:nth-child(3) th {
       position: sticky;
-      top: 28px;
+      top: 56px;
       z-index: 20;
       background-color: #e2e8f0;
       font-weight: 600;
@@ -186,9 +228,8 @@
     }
 
     /* 左上角凍結焦點 */
-    thead tr:nth-child(1) th.col-name, thead tr:nth-child(1) th.col-group,
-    thead tr:nth-child(2) th.col-name, thead tr:nth-child(2) th.col-group {
-      z-index: 30 !important;
+    thead th.col-name, thead th.col-group {
+      z-index: 35 !important;
       background-color: #cbd5e1 !important;
     }
 
@@ -204,6 +245,41 @@
       background-color: var(--danger-bg) !important;
       color: var(--danger-text) !important;
       font-weight: bold;
+    }
+
+    /* 🟥 變形工時週期：紅色膠囊與框線 */
+    .th-cycle-red {
+      border: 2px solid #dc2626 !important;
+      border-bottom: 3px solid #dc2626 !important;
+      background-color: #fff1f2 !important;
+      color: #9f1239 !important;
+      font-size: 11px !important;
+      font-weight: bold;
+      border-radius: 4px 4px 0 0;
+      box-shadow: inset 0 0 0 1px #fee2e2;
+    }
+    .cycle-start-red {
+      border-left: 3px solid #dc2626 !important;
+    }
+
+    /* 🟦 變形工時週期：淺藍色膠囊與框線 */
+    .th-cycle-blue {
+      border: 2px solid #0284c7 !important;
+      border-bottom: 3px solid #0284c7 !important;
+      background-color: #f0f9ff !important;
+      color: #0369a1 !important;
+      font-size: 11px !important;
+      font-weight: bold;
+      border-radius: 4px 4px 0 0;
+      box-shadow: inset 0 0 0 1px #bae6fd;
+    }
+    .cycle-start-blue {
+      border-left: 3px solid #0284c7 !important;
+    }
+
+    /* 週期交界處的明顯深色隔線 */
+    .cycle-divider-boundary {
+      border-right: 4px solid #1e293b !important;
     }
 
     /* 值班專屬格子底色樣式 */
@@ -269,8 +345,23 @@
     .shift-8H17C08 { color: #047857; }
     .shift-8H5on8 { color: #4338ca; }
 
+    /* 統計欄位樣式 */
     .stat-col { background-color: #f8fafc; font-weight: bold; min-width: 55px; }
     .stat-off { color: #dc2626; }
+    .stat-cycle-deficit {
+      min-width: 115px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #b91c1c;
+      background-color: #fffaf0;
+      padding: 4px 6px;
+      white-space: normal;
+      line-height: 1.3;
+    }
+    .stat-cycle-ok {
+      color: #15803d !important;
+      font-weight: bold;
+    }
     .total-row { background-color: #f1f5f9; font-weight: bold; }
 
     /* 電腦版螢幕專用優化 */
@@ -288,6 +379,10 @@
         font-size: 12px;
         padding: 4px 10px;
       }
+      .cycle-info-bar {
+        font-size: 14px;
+        padding: 10px 20px;
+      }
       select, button, input {
         padding: 8px 12px;
         font-size: 14px;
@@ -297,18 +392,22 @@
         font-size: 15px;
       }
       table {
-        min-width: 2300px;
+        min-width: 2450px;
         font-size: 14px;
       }
       th, td {
         padding: 6px 3px;
       }
       thead tr:nth-child(1) th {
-        height: 36px;
-        font-size: 14px;
+        height: 34px;
+        font-size: 13px;
       }
       thead tr:nth-child(2) th {
-        height: 30px;
+        height: 34px;
+        font-size: 14px;
+      }
+      thead tr:nth-child(3) th {
+        height: 28px;
         font-size: 13px;
       }
       .col-name {
@@ -339,6 +438,10 @@
         min-width: 70px;
         font-size: 14px;
       }
+      .stat-cycle-deficit {
+        min-width: 130px;
+        font-size: 12px;
+      }
       .leave-cell {
         height: 42px;
         font-size: 14px;
@@ -353,7 +456,9 @@
       <h1>醫學影像排班與休假系統</h1>
       <div class="rule-badges">
         <span class="rule-badge badge-cloud" id="syncStatus">⚡ Firebase 即時連線中</span>
-        <span class="rule-badge badge-duty-1">🟡 一線值班/1.5T(淺黃底)</span>
+        <span class="rule-badge badge-cycle-red">🟥 週期(紅)</span>
+        <span class="rule-badge badge-cycle-blue">🟦 週期(淺藍)</span>
+        <span class="rule-badge badge-duty-1">🟡 一線/1.5T值班(淺黃底)</span>
         <span class="rule-badge badge-duty-2">🔵 二線值班(淺藍底)</span>
         <span class="rule-badge badge-ct">CT崗位月輪序</span>
         <span class="rule-badge badge-mri">MRI每週輪替</span>
@@ -372,6 +477,9 @@
     </div>
   </div>
 
+  <!-- 變形工時週期即時提示條 -->
+  <div class="cycle-info-bar" id="cycleInfoBar"></div>
+
   <div class="tab-bar">
     <button class="tab-btn active" id="tabRosterBtn" onclick="switchTab('roster')">📋 月排班表</button>
     <button class="tab-btn" id="tabLeaveBtn" onclick="switchTab('leave')">🏖️ 畫休假登記表（點選標記OFF）</button>
@@ -380,17 +488,20 @@
   <div class="table-wrapper" id="rosterSection">
     <table>
       <thead>
+        <tr id="rosterHeaderCycles">
+          <th class="col-name"></th>
+          <th class="col-group"></th>
+          <!-- 動態插入日期與週期膠囊 -->
+        </tr>
         <tr id="rosterHeaderDates">
           <th class="col-name">成員姓名</th>
           <th class="col-group">組別/主崗位</th>
-          <th class="stat-col">出勤天</th>
-          <th class="stat-col stat-off">OFF天</th>
+          <!-- 動態插入日期列與統計標頭 -->
         </tr>
         <tr id="rosterHeaderDays">
           <th class="col-name"></th>
           <th class="col-group"></th>
-          <th class="stat-col">天</th>
-          <th class="stat-col stat-off">天</th>
+          <!-- 動態插入星期列 -->
         </tr>
       </thead>
       <tbody id="rosterBody"></tbody>
@@ -400,15 +511,20 @@
   <div class="table-wrapper" id="leaveSection" style="display: none;">
     <table>
       <thead>
+        <tr id="leaveHeaderCycles">
+          <th class="col-name"></th>
+          <th class="col-group"></th>
+          <!-- 動態插入 -->
+        </tr>
         <tr id="leaveHeaderDates">
           <th class="col-name">成員姓名</th>
           <th class="col-group">組別/主崗位</th>
-          <th class="stat-col stat-off">休假總計</th>
+          <!-- 動態插入 -->
         </tr>
         <tr id="leaveHeaderDays">
           <th class="col-name"></th>
           <th class="col-group"></th>
-          <th class="stat-col stat-off">天</th>
+          <!-- 動態插入 -->
         </tr>
       </thead>
       <tbody id="leaveBody"></tbody>
@@ -416,7 +532,7 @@
         <tr id="leaveFooterCount" class="total-row">
           <th class="col-name">每日休假統計</th>
           <th class="col-group">OFF人數</th>
-          <th class="stat-col stat-off" id="leaveMonthlyGrandTotal">0</th>
+          <!-- 動態插入統計天數 -->
         </tr>
       </tfoot>
     </table>
@@ -442,6 +558,51 @@
     }
     const db = firebase.database();
 
+    // -------------------------------------------------------------
+    // 🟥/🟦 變形工時 4 週週期設定（4例、4休、X國）
+    // -------------------------------------------------------------
+    const WORK_CYCLES = [
+      { id: 10, name: "週期10", color: "red", start: "2026-08-31", end: "2026-09-27", reqLei: 4, reqXiu: 4, reqGuo: 1, quota: "4例、4休、1國 (共 9 天)" },
+      { id: 11, name: "週期11", color: "blue", start: "2026-09-28", end: "2026-10-25", reqLei: 4, reqXiu: 4, reqGuo: 2, quota: "4例、4休、2國 (共 10 天)" },
+      { id: 12, name: "週期12", color: "red", start: "2026-10-26", end: "2026-11-22", reqLei: 4, reqXiu: 4, reqGuo: 1, quota: "4例、4休、1國 (共 9 天)" },
+      { id: 13, name: "週期13", color: "blue", start: "2026-11-23", end: "2026-12-20", reqLei: 4, reqXiu: 4, reqGuo: 0, quota: "4例、4休、0國 (共 8 天)" }
+    ];
+
+    function getCycleInfoForDate(dateStr) {
+      return WORK_CYCLES.find(c => dateStr >= c.start && dateStr <= c.end) || null;
+    }
+
+    function getActiveCyclesForMonth(year, month) {
+      const mStr = month < 10 ? `0${month}` : `${month}`;
+      const firstDay = `${year}-${mStr}-01`;
+      const lastDay = `${year}-${mStr}-${getDaysInMonth(year, month)}`;
+      return WORK_CYCLES.filter(c => !(c.end < firstDay || c.start > lastDay));
+    }
+
+    // 計算週期差額公式 (差例、差休、差國)
+    function calculateCycleDeficit(actualOff, reqLei, reqXiu, reqGuo) {
+      const totalReq = reqLei + reqXiu + reqGuo;
+      if (actualOff >= totalReq) {
+        const surplus = actualOff - totalReq;
+        return { isOk: true, text: surplus > 0 ? `🟢 達標 (+${surplus})` : `🟢 已滿` };
+      }
+      
+      const diffLei = Math.max(0, reqLei - actualOff);
+      const remAfterLei = Math.max(0, actualOff - reqLei);
+
+      const diffXiu = Math.max(0, reqXiu - remAfterLei);
+      const remAfterXiu = Math.max(0, remAfterLei - reqXiu);
+
+      const diffGuo = Math.max(0, reqGuo - remAfterXiu);
+
+      let parts = [];
+      if (diffLei > 0) parts.push(`${diffLei}例`);
+      if (diffXiu > 0) parts.push(`${diffXiu}休`);
+      if (diffGuo > 0) parts.push(`${diffGuo}國`);
+
+      return { isOk: false, text: `差 ${parts.join('、')}` };
+    }
+
     // 基準設定
     const BASE_MRI_DATE = new Date(2026, 4, 11);
     const BASE_CT_YEAR = 2026;
@@ -449,7 +610,6 @@
     const BASE_CT_DUTY_DATE = new Date(2026, 7, 3);
 
     const MRI_MEMBERS = ["碰", "任", "揮荃", "佳", "忠", "阿文"];
-    // 1.5T 週一至五班別為 8-4C4-8
     const MRI_WEEK_ROLES = [
       { pos: "1.5S", shift: "8C16C08" },
       { pos: "1.5S小夜", shift: "15C23C8" },
@@ -585,67 +745,213 @@
 
     function renderAll() {
       renderCalendarHeader();
+      renderCycleInfo();
       listenToFirebaseData();
+    }
+
+    function renderCycleInfo() {
+      const year = parseInt(yearSelect.value);
+      const month = parseInt(monthSelect.value);
+      const activeCycles = getActiveCyclesForMonth(year, month);
+      const bar = document.getElementById("cycleInfoBar");
+
+      if (activeCycles.length > 0) {
+        let html = `<span>📌 <strong>${year}年${month}月 變形工時週期：</strong></span>`;
+        activeCycles.forEach(c => {
+          const itemClass = c.color === "red" ? "cycle-item-red" : "cycle-item-blue";
+          html += `<span class="${itemClass}"><strong>【${c.name}】</strong> (${c.start.substring(5)} ~ ${c.end.substring(5)}) 需 <strong>${c.quota}</strong></span>`;
+        });
+        bar.innerHTML = html;
+        bar.style.display = "flex";
+      } else {
+        bar.innerHTML = `<span>📌 <strong>${year}年${month}月 變形工時週期</strong></span>`;
+      }
     }
 
     function renderCalendarHeader() {
       const year = parseInt(yearSelect.value);
       const month = parseInt(monthSelect.value);
       const daysCount = getDaysInMonth(year, month);
+      const mStr = month < 10 ? `0${month}` : `${month}`;
+      const activeCycles = getActiveCyclesForMonth(year, month);
 
+      const rCycles = document.getElementById("rosterHeaderCycles");
       const rDates = document.getElementById("rosterHeaderDates");
       const rDays = document.getElementById("rosterHeaderDays");
+      const lCycles = document.getElementById("leaveHeaderCycles");
       const lDates = document.getElementById("leaveHeaderDates");
       const lDays = document.getElementById("leaveHeaderDays");
       const lFooter = document.getElementById("leaveFooterCount");
 
-      while (rDates.children.length > 4) rDates.removeChild(rDates.children[2]);
-      while (rDays.children.length > 4) rDays.removeChild(rDays.children[2]);
-      while (lDates.children.length > 3) lDates.removeChild(lDates.children[2]);
-      while (lDays.children.length > 3) lDays.removeChild(lDays.children[2]);
-      while (lFooter.children.length > 3) lFooter.removeChild(lFooter.children[2]);
+      // 清空舊表頭
+      rCycles.innerHTML = `<th class="col-name"></th><th class="col-group"></th>`;
+      rDates.innerHTML = `<th class="col-name">成員姓名</th><th class="col-group">組別/主崗位</th>`;
+      rDays.innerHTML = `<th class="col-name"></th><th class="col-group"></th>`;
+
+      lCycles.innerHTML = `<th class="col-name"></th><th class="col-group"></th>`;
+      lDates.innerHTML = `<th class="col-name">成員姓名</th><th class="col-group">組別/主崗位</th>`;
+      lDays.innerHTML = `<th class="col-name"></th><th class="col-group"></th>`;
+      lFooter.innerHTML = `<th class="col-name">每日休假統計</th><th class="col-group">OFF人數</th>`;
+
+      // 1. 生成頂部「獨立週期膠囊」跨欄（Colspan）
+      let curCycle = null;
+      let spanCount = 0;
 
       for (let day = 1; day <= daysCount; day++) {
+        const dStr = day < 10 ? `0${day}` : `${day}`;
+        const dateKey = `${year}-${mStr}-${dStr}`;
+        const cycle = getCycleInfoForDate(dateKey);
+
+        if (day === 1) {
+          curCycle = cycle;
+          spanCount = 1;
+        } else if (cycle === curCycle) {
+          spanCount++;
+        } else {
+          appendCycleHeader(rCycles, lCycles, curCycle, spanCount);
+          curCycle = cycle;
+          spanCount = 1;
+        }
+
+        if (day === daysCount) {
+          appendCycleHeader(rCycles, lCycles, curCycle, spanCount);
+        }
+      }
+
+      // 2. 生成日期列與星期列
+      for (let day = 1; day <= daysCount; day++) {
+        const dStr = day < 10 ? `0${day}` : `${day}`;
+        const dateKey = `${year}-${mStr}-${dStr}`;
         const dateObj = new Date(year, month - 1, day);
         const weekDay = dateObj.getDay();
         const isWeekend = (weekDay === 0 || weekDay === 6);
         const isSunday = (weekDay === 0);
+
+        const cycle = getCycleInfoForDate(dateKey);
+        const isCycleEnd = cycle && (cycle.end === dateKey);
+        const isCycleStart = cycle && (cycle.start === dateKey);
+
+        const applyBoundary = (elem) => {
+          if (cycle) {
+            if (isCycleStart) elem.classList.add(cycle.color === 'red' ? 'cycle-start-red' : 'cycle-start-blue');
+            if (isCycleEnd && day !== daysCount) elem.classList.add("cycle-divider-boundary");
+          }
+        };
 
         const thRDate = document.createElement("th");
         thRDate.textContent = day;
         thRDate.id = `r_th_date_${day}`;
         if (isWeekend) thRDate.classList.add("weekend");
         if (isSunday) thRDate.classList.add("week-divider");
-        rDates.insertBefore(thRDate, rDates.children[rDates.children.length - 2]);
+        applyBoundary(thRDate);
+        rDates.appendChild(thRDate);
 
         const thRDay = document.createElement("th");
         thRDay.textContent = weekDayNames[weekDay];
         thRDay.id = `r_th_day_${day}`;
         if (isWeekend) thRDay.classList.add("weekend");
         if (isSunday) thRDay.classList.add("week-divider");
-        rDays.insertBefore(thRDay, rDays.children[rDays.children.length - 2]);
+        applyBoundary(thRDay);
+        rDays.appendChild(thRDay);
 
         const thLDate = document.createElement("th");
         thLDate.textContent = day;
         thLDate.id = `l_th_date_${day}`;
         if (isWeekend) thLDate.classList.add("weekend");
         if (isSunday) thLDate.classList.add("week-divider");
-        lDates.insertBefore(thLDate, lDates.children[lDates.children.length - 1]);
+        applyBoundary(thLDate);
+        lDates.appendChild(thLDate);
 
         const thLDay = document.createElement("th");
         thLDay.textContent = weekDayNames[weekDay];
         thLDay.id = `l_th_day_${day}`;
         if (isWeekend) thLDay.classList.add("weekend");
         if (isSunday) thLDay.classList.add("week-divider");
-        lDays.insertBefore(thLDay, lDays.children[lDays.children.length - 1]);
+        applyBoundary(thLDay);
+        lDays.appendChild(thLDay);
 
         const thLCount = document.createElement("th");
         thLCount.id = `l_day_count_${day}`;
         thLCount.textContent = "0";
         if (isWeekend) thLCount.classList.add("weekend");
         if (isSunday) thLCount.classList.add("week-divider");
-        lFooter.insertBefore(thLCount, lFooter.children[lFooter.children.length - 1]);
+        applyBoundary(thLCount);
+        lFooter.appendChild(thLCount);
       }
+
+      // 3. 附加右側統計欄位標頭（含週期差額欄）
+      const statSpanCount = 2 + activeCycles.length;
+
+      // 週期列右側標籤
+      const thRCycleStat = document.createElement("th");
+      thRCycleStat.colSpan = statSpanCount;
+      thRCycleStat.className = "stat-col";
+      thRCycleStat.style.cssText = "font-size:11px; color:#475569; background:#f8fafc;";
+      thRCycleStat.textContent = "統計與週期檢核";
+      rCycles.appendChild(thRCycleStat);
+
+      const thLCycleStat = document.createElement("th");
+      thLCycleStat.colSpan = 1 + activeCycles.length;
+      thLCycleStat.className = "stat-col";
+      thLCycleStat.style.cssText = "font-size:11px; color:#475569; background:#f8fafc;";
+      thLCycleStat.textContent = "休假統計與週期檢核";
+      lCycles.appendChild(thLCycleStat);
+
+      // 日期列右側標頭
+      rDates.innerHTML += `<th class="stat-col">出勤天</th><th class="stat-col stat-off">OFF天</th>`;
+      lDates.innerHTML += `<th class="stat-col stat-off">休假總計</th>`;
+
+      activeCycles.forEach(c => {
+        const thDeficitR = document.createElement("th");
+        thDeficitR.className = "stat-col stat-cycle-deficit";
+        thDeficitR.innerHTML = `【${c.name}差額】<br><span style="font-size:10px;font-weight:normal;color:#64748b;">(需${c.reqLei}例${c.reqXiu}休${c.reqGuo}國)</span>`;
+        rDates.appendChild(thDeficitR);
+
+        const thDeficitL = document.createElement("th");
+        thDeficitL.className = "stat-col stat-cycle-deficit";
+        thDeficitL.innerHTML = `【${c.name}差額】<br><span style="font-size:10px;font-weight:normal;color:#64748b;">(需${c.reqLei}例${c.reqXiu}休${c.reqGuo}國)</span>`;
+        lDates.appendChild(thDeficitL);
+      });
+
+      // 星期列右側標頭
+      rDays.innerHTML += `<th class="stat-col">天</th><th class="stat-col stat-off">天</th>`;
+      lDays.innerHTML += `<th class="stat-col stat-off">天</th>`;
+
+      activeCycles.forEach(() => {
+        rDays.innerHTML += `<th class="stat-col stat-cycle-deficit">例 / 休 / 國</th>`;
+        lDays.innerHTML += `<th class="stat-col stat-cycle-deficit">例 / 休 / 國</th>`;
+      });
+
+      // 休假表 Footer 右側總計
+      lFooter.innerHTML += `<th class="stat-col stat-off" id="leaveMonthlyGrandTotal">0</th>`;
+      activeCycles.forEach(() => {
+        lFooter.innerHTML += `<th class="stat-col stat-cycle-deficit">-</th>`;
+      });
+    }
+
+    function appendCycleHeader(rRow, lRow, cycle, span) {
+      const thR = document.createElement("th");
+      thR.colSpan = span;
+      const thL = document.createElement("th");
+      thL.colSpan = span;
+
+      if (cycle) {
+        const cls = cycle.color === "red" ? "th-cycle-red" : "th-cycle-blue";
+        thR.className = cls;
+        thL.className = cls;
+        const icon = cycle.color === "red" ? "🟥" : "🟦";
+        const text = `${icon} 【${cycle.name}】(${cycle.quota.split(' ')[0]})`;
+        thR.textContent = text;
+        thL.textContent = text;
+      } else {
+        thR.textContent = "-";
+        thL.textContent = "-";
+        thR.style.backgroundColor = "#f8fafc";
+        thL.style.backgroundColor = "#f8fafc";
+      }
+
+      rRow.appendChild(thR);
+      lRow.appendChild(thL);
     }
 
     function listenToFirebaseData() {
@@ -677,6 +983,8 @@
       const year = parseInt(yearSelect.value);
       const month = parseInt(monthSelect.value);
       const daysCount = getDaysInMonth(year, month);
+      const mStr = month < 10 ? `0${month}` : `${month}`;
+      const activeCycles = getActiveCyclesForMonth(year, month);
       const savedData = JSON.parse(localStorage.getItem(`team_roster_${year}_${month}`) || "{}");
       const rosterBody = document.getElementById("rosterBody");
 
@@ -705,6 +1013,8 @@
         tr.appendChild(tdGroup);
 
         for (let day = 1; day <= daysCount; day++) {
+          const dStr = day < 10 ? `0${day}` : `${day}`;
+          const dateKey = `${year}-${mStr}-${dStr}`;
           const td = document.createElement("td");
           td.id = `r_td_${m.id}_${day}`;
           const dateObj = new Date(year, month - 1, day);
@@ -714,6 +1024,12 @@
 
           if (isWeekend) td.classList.add("weekend");
           if (isSunday) td.classList.add("week-divider");
+
+          const cycle = getCycleInfoForDate(dateKey);
+          if (cycle) {
+            if (cycle.start === dateKey) td.classList.add(cycle.color === 'red' ? 'cycle-start-red' : 'cycle-start-blue');
+            if (cycle.end === dateKey && day !== daysCount) td.classList.add("cycle-divider-boundary");
+          }
 
           const box = document.createElement("div");
           box.className = "cell-box";
@@ -767,6 +1083,7 @@
           tr.appendChild(td);
         }
 
+        // 基本統計
         const tdWorkDays = document.createElement("td");
         tdWorkDays.id = `workdays_${m.id}`;
         tdWorkDays.className = "stat-col";
@@ -779,6 +1096,15 @@
         tdOffDays.textContent = "0";
         tr.appendChild(tdOffDays);
 
+        // 🟥 週期差額統計欄
+        activeCycles.forEach(c => {
+          const tdDeficit = document.createElement("td");
+          tdDeficit.id = `cycle_deficit_${c.id}_${m.id}`;
+          tdDeficit.className = "stat-col stat-cycle-deficit";
+          tdDeficit.textContent = "-";
+          tr.appendChild(tdDeficit);
+        });
+
         rosterBody.appendChild(tr);
       });
     }
@@ -787,6 +1113,8 @@
       const year = parseInt(yearSelect.value);
       const month = parseInt(monthSelect.value);
       const daysCount = getDaysInMonth(year, month);
+      const mStr = month < 10 ? `0${month}` : `${month}`;
+      const activeCycles = getActiveCyclesForMonth(year, month);
       const leaveBody = document.getElementById("leaveBody");
 
       leaveBody.innerHTML = "";
@@ -813,6 +1141,8 @@
         tr.appendChild(tdGroup);
 
         for (let day = 1; day <= daysCount; day++) {
+          const dStr = day < 10 ? `0${day}` : `${day}`;
+          const dateKey = `${year}-${mStr}-${dStr}`;
           const td = document.createElement("td");
           td.className = "leave-cell";
           td.id = `leave_${m.id}_${day}`;
@@ -823,6 +1153,12 @@
 
           if (isWeekend) td.classList.add("weekend");
           if (isSunday) td.classList.add("week-divider");
+
+          const cycle = getCycleInfoForDate(dateKey);
+          if (cycle) {
+            if (cycle.start === dateKey) td.classList.add(cycle.color === 'red' ? 'cycle-start-red' : 'cycle-start-blue');
+            if (cycle.end === dateKey && day !== daysCount) td.classList.add("cycle-divider-boundary");
+          }
 
           const shiftSel = document.querySelector(`.shift-select[data-member-id="${m.id}"][data-day="${day}"]`);
           const isOff = shiftSel && shiftSel.value === "OFF";
@@ -846,6 +1182,15 @@
         tdTotalOff.className = "stat-col stat-off";
         tdTotalOff.textContent = "0";
         tr.appendChild(tdTotalOff);
+
+        // 🟥 週期差額統計欄
+        activeCycles.forEach(c => {
+          const tdDeficit = document.createElement("td");
+          tdDeficit.id = `leave_cycle_deficit_${c.id}_${m.id}`;
+          tdDeficit.className = "stat-col stat-cycle-deficit";
+          tdDeficit.textContent = "-";
+          tr.appendChild(tdDeficit);
+        });
 
         leaveBody.appendChild(tr);
       });
@@ -996,7 +1341,6 @@
       }
     }
 
-    // ⚡ 自動排班邏輯
     function autoGenerateRoster() {
       const year = parseInt(yearSelect.value);
       const month = parseInt(monthSelect.value);
@@ -1032,11 +1376,9 @@
 
             if (!alreadyOff) {
               if (weekDay >= 1 && weekDay <= 5) {
-                // 週一至週五正常輪替班別（1.5T 為 8-4C4-8）
                 select.value = currentRole.shift;
                 select.className = `shift-select shift-${currentRole.shift}`;
               } else if (weekDay === 6) {
-                // 週六：1.5T 為 8-4C4-8；支援二為 8H17C08；其餘 OFF
                 if (currentRole.pos === "1.5T") {
                   select.value = "8-4C4-8";
                   select.className = "shift-select shift-8-4C4-8";
@@ -1048,7 +1390,6 @@
                   select.className = "shift-select shift-OFF";
                 }
               } else if (weekDay === 0) {
-                // 週日：1.5T 為 C8C8C24；其餘 OFF
                 if (currentRole.pos === "1.5T") {
                   select.value = "C8C8C24";
                   select.className = "shift-select shift-C8C8C24";
@@ -1059,7 +1400,6 @@
               }
             }
           } else {
-            // CT 組及支援一
             const dutyIdx = getCtDutyWeekIndex(dateObj);
             const duty = CT_DUTY_CYCLES[dutyIdx];
             const isPrimary = (duty.primary === m.id);
@@ -1119,7 +1459,7 @@
       saveData();
       renderLeaveBody();
       updateAllStats();
-      alert(`已成功帶入 ${year} 年 ${month} 月輪值（1.5T 已修正為平日 8-4C4-8、六 8-4C4-8、日 C8C8C24）！`);
+      alert(`已成功帶入 ${year} 年 ${month} 月輪值（已更新週期差額計算）！`);
     }
 
     function saveData() {
@@ -1146,22 +1486,37 @@
       db.ref(`medical_roster/${year}_${month}`).set(data);
     }
 
+    // ⚡ 計算全部統計（含週期差額：差幾天例、差幾天休、差幾天國）
     function updateAllStats() {
       const year = parseInt(yearSelect.value);
       const month = parseInt(monthSelect.value);
       const daysCount = getDaysInMonth(year, month);
+      const mStr = month < 10 ? `0${month}` : `${month}`;
+      const activeCycles = getActiveCyclesForMonth(year, month);
       let monthlyGrandTotal = 0;
 
       teamMembers.forEach(m => {
         let workCount = 0;
         let offCount = 0;
 
+        // 計算各週期在當月內的實際 OFF 數
+        const cycleOffCounts = {};
+        activeCycles.forEach(c => cycleOffCounts[c.id] = 0);
+
         for (let day = 1; day <= daysCount; day++) {
+          const dStr = day < 10 ? `0${day}` : `${day}`;
+          const dateKey = `${year}-${mStr}-${dStr}`;
           const select = document.querySelector(`.shift-select[data-member-id="${m.id}"][data-day="${day}"]`);
+
           if (select) {
             const val = select.value;
             if (val === "OFF") {
               offCount++;
+              activeCycles.forEach(c => {
+                if (dateKey >= c.start && dateKey <= c.end) {
+                  cycleOffCounts[c.id]++;
+                }
+              });
             } else if (val !== "") {
               workCount++;
             }
@@ -1176,11 +1531,34 @@
         if (wElem) wElem.textContent = workCount;
         if (oElem) oElem.textContent = offCount;
         if (lElem) lElem.textContent = offCount;
+
+        // 更新週期差額結果
+        activeCycles.forEach(c => {
+          const actualCycleOff = cycleOffCounts[c.id] || 0;
+          const deficitResult = calculateCycleDeficit(actualCycleOff, c.reqLei, c.reqXiu, c.reqGuo);
+
+          const rDefElem = document.getElementById(`cycle_deficit_${c.id}_${m.id}`);
+          const lDefElem = document.getElementById(`leave_cycle_deficit_${c.id}_${m.id}`);
+
+          const applyDeficitStyle = (elem) => {
+            if (!elem) return;
+            elem.textContent = deficitResult.text;
+            if (deficitResult.isOk) {
+              elem.classList.add("stat-cycle-ok");
+            } else {
+              elem.classList.remove("stat-cycle-ok");
+            }
+          };
+
+          applyDeficitStyle(rDefElem);
+          applyDeficitStyle(lDefElem);
+        });
       });
 
       const grandTotalElem = document.getElementById("leaveMonthlyGrandTotal");
       if (grandTotalElem) grandTotalElem.textContent = monthlyGrandTotal;
 
+      // 每日上限檢核
       for (let day = 1; day <= daysCount; day++) {
         const dateObj = new Date(year, month - 1, day);
         const weekDay = dateObj.getDay();
@@ -1229,16 +1607,19 @@
       }
     }
 
+    // 匯出 CSV（含週期差額）
     function exportToCSV() {
       const year = yearSelect.value;
       const month = monthSelect.value;
       const daysCount = getDaysInMonth(year, month);
+      const activeCycles = getActiveCyclesForMonth(parseInt(year), parseInt(month));
       
       let csvContent = "\uFEFF";
       
       let row1 = ["成員姓名", "組別/主崗位"];
       for (let d = 1; d <= daysCount; d++) row1.push(`${month}/${d}`);
       row1.push("出勤天數", "OFF天數");
+      activeCycles.forEach(c => row1.push(`【${c.name}差額】`));
       csvContent += row1.join(",") + "\r\n";
 
       let row2 = ["", ""];
@@ -1247,6 +1628,7 @@
         row2.push(weekDayNames[weekDay]);
       }
       row2.push("", "");
+      activeCycles.forEach(() => row2.push("例/休/國"));
       csvContent += row2.join(",") + "\r\n";
 
       const rows = document.querySelectorAll("#rosterBody tr");
@@ -1266,6 +1648,12 @@
         const workDays = r.querySelector("[id^='workdays_']").textContent;
         const offDays = r.querySelector("[id^='offdays_']").textContent;
         rowData.push(workDays, offDays);
+
+        activeCycles.forEach(c => {
+          const mId = r.dataset.memberId;
+          const defElem = document.getElementById(`cycle_deficit_${c.id}_${mId}`);
+          rowData.push(`"${defElem ? defElem.textContent : '-'}"`);
+        });
 
         csvContent += rowData.join(",") + "\r\n";
       });
