@@ -15,6 +15,8 @@
       --primary-light: #2563eb;
       --weekend-bg: #fee2e2;
       --weekend-text: #991b1b;
+      --holiday-bg: #ffe4e6;
+      --holiday-text: #e11d48;
       --border-color: #cbd5e1;
       --bg-color: #f8fafc;
       --cover-bg: #fef3c7;
@@ -195,11 +197,11 @@
       z-index: 20;
       background-color: #e2e8f0;
       font-weight: 600;
-      height: 28px;
+      height: 32px;
     }
     thead tr:nth-child(3) th {
       position: sticky;
-      top: 56px;
+      top: 60px;
       z-index: 20;
       background-color: #e2e8f0;
       font-weight: 600;
@@ -236,6 +238,18 @@
     .weekend {
       background-color: var(--weekend-bg) !important;
       color: var(--weekend-text);
+    }
+    .national-holiday {
+      background-color: var(--holiday-bg) !important;
+      color: var(--holiday-text) !important;
+    }
+    .holiday-tag {
+      display: block;
+      font-size: 9px;
+      color: #e11d48;
+      font-weight: bold;
+      line-height: 1;
+      margin-top: 1px;
     }
     .week-divider {
       border-right: 2px solid #64748b !important;
@@ -403,7 +417,7 @@
         font-size: 13px;
       }
       thead tr:nth-child(2) th {
-        height: 34px;
+        height: 38px;
         font-size: 14px;
       }
       thead tr:nth-child(3) th {
@@ -441,6 +455,9 @@
       .stat-cycle-deficit {
         min-width: 130px;
         font-size: 12px;
+      }
+      .holiday-tag {
+        font-size: 10px;
       }
       .leave-cell {
         height: 42px;
@@ -491,17 +508,14 @@
         <tr id="rosterHeaderCycles">
           <th class="col-name"></th>
           <th class="col-group"></th>
-          <!-- 動態插入日期與週期膠囊 -->
         </tr>
         <tr id="rosterHeaderDates">
           <th class="col-name">成員姓名</th>
           <th class="col-group">組別/主崗位</th>
-          <!-- 動態插入日期列與統計標頭 -->
         </tr>
         <tr id="rosterHeaderDays">
           <th class="col-name"></th>
           <th class="col-group"></th>
-          <!-- 動態插入星期列 -->
         </tr>
       </thead>
       <tbody id="rosterBody"></tbody>
@@ -514,17 +528,14 @@
         <tr id="leaveHeaderCycles">
           <th class="col-name"></th>
           <th class="col-group"></th>
-          <!-- 動態插入 -->
         </tr>
         <tr id="leaveHeaderDates">
           <th class="col-name">成員姓名</th>
           <th class="col-group">組別/主崗位</th>
-          <!-- 動態插入 -->
         </tr>
         <tr id="leaveHeaderDays">
           <th class="col-name"></th>
           <th class="col-group"></th>
-          <!-- 動態插入 -->
         </tr>
       </thead>
       <tbody id="leaveBody"></tbody>
@@ -532,7 +543,6 @@
         <tr id="leaveFooterCount" class="total-row">
           <th class="col-name">每日休假統計</th>
           <th class="col-group">OFF人數</th>
-          <!-- 動態插入統計天數 -->
         </tr>
       </tfoot>
     </table>
@@ -557,6 +567,34 @@
       firebase.initializeApp(firebaseConfig);
     }
     const db = firebase.database();
+
+    // -------------------------------------------------------------
+    // 🇹🇼 2026 行政院公告國定假日清單 (可隨時在此新增/修改)
+    // -------------------------------------------------------------
+    const HOLIDAYS = {
+      "2026-01-01": "元旦",
+      "2026-02-15": "小年夜",
+      "2026-02-16": "除夕",
+      "2026-02-17": "春節",
+      "2026-02-18": "初二",
+      "2026-02-19": "初三",
+      "2026-02-20": "春節補假",
+      "2026-02-27": "228補假",
+      "2026-02-28": "和平紀念日",
+      "2026-04-03": "兒童節補假",
+      "2026-04-04": "兒童節",
+      "2026-04-05": "清明節",
+      "2026-04-06": "清明補假",
+      "2026-05-01": "勞動節",
+      "2026-06-19": "端午節",
+      "2026-09-25": "中秋節",
+      "2026-09-28": "教師節",
+      "2026-10-09": "國慶補假",
+      "2026-10-10": "國慶日",
+      "2026-10-25": "光復節",
+      "2026-10-26": "光復補假",
+      "2026-12-25": "行憲紀念日"
+    };
 
     // -------------------------------------------------------------
     // 🟥/🟦 變形工時 4 週週期設定（4例、4休、X國）
@@ -783,7 +821,6 @@
       const lDays = document.getElementById("leaveHeaderDays");
       const lFooter = document.getElementById("leaveFooterCount");
 
-      // 清空舊表頭
       rCycles.innerHTML = `<th class="col-name"></th><th class="col-group"></th>`;
       rDates.innerHTML = `<th class="col-name">成員姓名</th><th class="col-group">組別/主崗位</th>`;
       rDays.innerHTML = `<th class="col-name"></th><th class="col-group"></th>`;
@@ -793,7 +830,7 @@
       lDays.innerHTML = `<th class="col-name"></th><th class="col-group"></th>`;
       lFooter.innerHTML = `<th class="col-name">每日休假統計</th><th class="col-group">OFF人數</th>`;
 
-      // 1. 生成頂部「獨立週期膠囊」跨欄（Colspan）
+      // 1. 生成頂部週期膠囊
       let curCycle = null;
       let spanCount = 0;
 
@@ -818,7 +855,7 @@
         }
       }
 
-      // 2. 生成日期列與星期列
+      // 2. 生成日期列與星期列（含國定假日判斷）
       for (let day = 1; day <= daysCount; day++) {
         const dStr = day < 10 ? `0${day}` : `${day}`;
         const dateKey = `${year}-${mStr}-${dStr}`;
@@ -826,6 +863,7 @@
         const weekDay = dateObj.getDay();
         const isWeekend = (weekDay === 0 || weekDay === 6);
         const isSunday = (weekDay === 0);
+        const holidayName = HOLIDAYS[dateKey] || null;
 
         const cycle = getCycleInfoForDate(dateKey);
         const isCycleEnd = cycle && (cycle.end === dateKey);
@@ -838,10 +876,13 @@
           }
         };
 
+        const holidayTagHtml = holidayName ? `<span class="holiday-tag">[${holidayName}]</span>` : '';
+
         const thRDate = document.createElement("th");
-        thRDate.textContent = day;
+        thRDate.innerHTML = `${day}${holidayTagHtml}`;
         thRDate.id = `r_th_date_${day}`;
         if (isWeekend) thRDate.classList.add("weekend");
+        if (holidayName) thRDate.classList.add("national-holiday");
         if (isSunday) thRDate.classList.add("week-divider");
         applyBoundary(thRDate);
         rDates.appendChild(thRDate);
@@ -850,14 +891,16 @@
         thRDay.textContent = weekDayNames[weekDay];
         thRDay.id = `r_th_day_${day}`;
         if (isWeekend) thRDay.classList.add("weekend");
+        if (holidayName) thRDay.classList.add("national-holiday");
         if (isSunday) thRDay.classList.add("week-divider");
         applyBoundary(thRDay);
         rDays.appendChild(thRDay);
 
         const thLDate = document.createElement("th");
-        thLDate.textContent = day;
+        thLDate.innerHTML = `${day}${holidayTagHtml}`;
         thLDate.id = `l_th_date_${day}`;
         if (isWeekend) thLDate.classList.add("weekend");
+        if (holidayName) thLDate.classList.add("national-holiday");
         if (isSunday) thLDate.classList.add("week-divider");
         applyBoundary(thLDate);
         lDates.appendChild(thLDate);
@@ -866,6 +909,7 @@
         thLDay.textContent = weekDayNames[weekDay];
         thLDay.id = `l_th_day_${day}`;
         if (isWeekend) thLDay.classList.add("weekend");
+        if (holidayName) thLDay.classList.add("national-holiday");
         if (isSunday) thLDay.classList.add("week-divider");
         applyBoundary(thLDay);
         lDays.appendChild(thLDay);
@@ -874,15 +918,15 @@
         thLCount.id = `l_day_count_${day}`;
         thLCount.textContent = "0";
         if (isWeekend) thLCount.classList.add("weekend");
+        if (holidayName) thLCount.classList.add("national-holiday");
         if (isSunday) thLCount.classList.add("week-divider");
         applyBoundary(thLCount);
         lFooter.appendChild(thLCount);
       }
 
-      // 3. 附加右側統計欄位標頭（含週期差額欄）
+      // 3. 附加右側統計欄位標頭
       const statSpanCount = 2 + activeCycles.length;
 
-      // 週期列右側標籤
       const thRCycleStat = document.createElement("th");
       thRCycleStat.colSpan = statSpanCount;
       thRCycleStat.className = "stat-col";
@@ -897,7 +941,6 @@
       thLCycleStat.textContent = "休假統計與週期檢核";
       lCycles.appendChild(thLCycleStat);
 
-      // 日期列右側標頭
       rDates.innerHTML += `<th class="stat-col">出勤天</th><th class="stat-col stat-off">OFF天</th>`;
       lDates.innerHTML += `<th class="stat-col stat-off">休假總計</th>`;
 
@@ -913,7 +956,6 @@
         lDates.appendChild(thDeficitL);
       });
 
-      // 星期列右側標頭
       rDays.innerHTML += `<th class="stat-col">天</th><th class="stat-col stat-off">天</th>`;
       lDays.innerHTML += `<th class="stat-col stat-off">天</th>`;
 
@@ -922,7 +964,6 @@
         lDays.innerHTML += `<th class="stat-col stat-cycle-deficit">例 / 休 / 國</th>`;
       });
 
-      // 休假表 Footer 右側總計
       lFooter.innerHTML += `<th class="stat-col stat-off" id="leaveMonthlyGrandTotal">0</th>`;
       activeCycles.forEach(() => {
         lFooter.innerHTML += `<th class="stat-col stat-cycle-deficit">-</th>`;
@@ -1021,8 +1062,10 @@
           const weekDay = dateObj.getDay();
           const isWeekend = (weekDay === 0 || weekDay === 6);
           const isSunday = (weekDay === 0);
+          const holidayName = HOLIDAYS[dateKey] || null;
 
           if (isWeekend) td.classList.add("weekend");
+          if (holidayName) td.classList.add("national-holiday");
           if (isSunday) td.classList.add("week-divider");
 
           const cycle = getCycleInfoForDate(dateKey);
@@ -1083,7 +1126,6 @@
           tr.appendChild(td);
         }
 
-        // 基本統計
         const tdWorkDays = document.createElement("td");
         tdWorkDays.id = `workdays_${m.id}`;
         tdWorkDays.className = "stat-col";
@@ -1096,7 +1138,6 @@
         tdOffDays.textContent = "0";
         tr.appendChild(tdOffDays);
 
-        // 🟥 週期差額統計欄
         activeCycles.forEach(c => {
           const tdDeficit = document.createElement("td");
           tdDeficit.id = `cycle_deficit_${c.id}_${m.id}`;
@@ -1150,8 +1191,10 @@
           const weekDay = dateObj.getDay();
           const isWeekend = (weekDay === 0 || weekDay === 6);
           const isSunday = (weekDay === 0);
+          const holidayName = HOLIDAYS[dateKey] || null;
 
           if (isWeekend) td.classList.add("weekend");
+          if (holidayName) td.classList.add("national-holiday");
           if (isSunday) td.classList.add("week-divider");
 
           const cycle = getCycleInfoForDate(dateKey);
@@ -1183,7 +1226,6 @@
         tdTotalOff.textContent = "0";
         tr.appendChild(tdTotalOff);
 
-        // 🟥 週期差額統計欄
         activeCycles.forEach(c => {
           const tdDeficit = document.createElement("td");
           tdDeficit.id = `leave_cycle_deficit_${c.id}_${m.id}`;
@@ -1341,17 +1383,22 @@
       }
     }
 
+    // ⚡ 自動排班邏輯（遇國定假日非值班自動排 OFF）
     function autoGenerateRoster() {
       const year = parseInt(yearSelect.value);
       const month = parseInt(monthSelect.value);
       const daysCount = getDaysInMonth(year, month);
+      const mStr = month < 10 ? `0${month}` : `${month}`;
 
       teamMembers.forEach(m => {
         const ctMonthlyPos = (m.type === "CT") ? getCtMonthlyPosition(m, year, month) : "";
 
         for (let day = 1; day <= daysCount; day++) {
+          const dStr = day < 10 ? `0${day}` : `${day}`;
+          const dateKey = `${year}-${mStr}-${dStr}`;
           const dateObj = new Date(year, month - 1, day);
           const weekDay = dateObj.getDay();
+          const isHoliday = !!HOLIDAYS[dateKey];
           const select = document.querySelector(`.shift-select[data-member-id="${m.id}"][data-day="${day}"]`);
           const posLabel = document.getElementById(`pos_${m.id}_${day}`);
           const td = document.getElementById(`r_td_${m.id}_${day}`);
@@ -1376,8 +1423,14 @@
 
             if (!alreadyOff) {
               if (weekDay >= 1 && weekDay <= 5) {
-                select.value = currentRole.shift;
-                select.className = `shift-select shift-${currentRole.shift}`;
+                if (isHoliday && currentRole.pos !== "1.5T") {
+                  // 國定假日非值班崗位自動 OFF
+                  select.value = "OFF";
+                  select.className = "shift-select shift-OFF";
+                } else {
+                  select.value = currentRole.shift;
+                  select.className = `shift-select shift-${currentRole.shift}`;
+                }
               } else if (weekDay === 6) {
                 if (currentRole.pos === "1.5T") {
                   select.value = "8-4C4-8";
@@ -1424,9 +1477,15 @@
 
             if (!alreadyOff) {
               if (weekDay >= 1 && weekDay <= 5) {
-                const shift = (isPrimary || isSecondary) ? "8H5on8" : "8H17C08";
-                select.value = shift;
-                select.className = `shift-select shift-${shift}`;
+                if (isHoliday && !isPrimary && !isSecondary) {
+                  // 國定假日非值班人員自動 OFF
+                  select.value = "OFF";
+                  select.className = "shift-select shift-OFF";
+                } else {
+                  const shift = (isPrimary || isSecondary) ? "8H5on8" : "8H17C08";
+                  select.value = shift;
+                  select.className = `shift-select shift-${shift}`;
+                }
               } else if (weekDay === 6) {
                 if (isPrimary) {
                   select.value = "8-4C4-8";
@@ -1459,7 +1518,7 @@
       saveData();
       renderLeaveBody();
       updateAllStats();
-      alert(`已成功帶入 ${year} 年 ${month} 月輪值（已更新週期差額計算）！`);
+      alert(`已成功帶入 ${year} 年 ${month} 月輪值（已整合國定假日排班與週期差額計算）！`);
     }
 
     function saveData() {
@@ -1486,7 +1545,6 @@
       db.ref(`medical_roster/${year}_${month}`).set(data);
     }
 
-    // ⚡ 計算全部統計（含週期差額：差幾天例、差幾天休、差幾天國）
     function updateAllStats() {
       const year = parseInt(yearSelect.value);
       const month = parseInt(monthSelect.value);
@@ -1499,7 +1557,6 @@
         let workCount = 0;
         let offCount = 0;
 
-        // 計算各週期在當月內的實際 OFF 數
         const cycleOffCounts = {};
         activeCycles.forEach(c => cycleOffCounts[c.id] = 0);
 
@@ -1532,7 +1589,6 @@
         if (oElem) oElem.textContent = offCount;
         if (lElem) lElem.textContent = offCount;
 
-        // 更新週期差額結果
         activeCycles.forEach(c => {
           const actualCycleOff = cycleOffCounts[c.id] || 0;
           const deficitResult = calculateCycleDeficit(actualCycleOff, c.reqLei, c.reqXiu, c.reqGuo);
@@ -1558,11 +1614,13 @@
       const grandTotalElem = document.getElementById("leaveMonthlyGrandTotal");
       if (grandTotalElem) grandTotalElem.textContent = monthlyGrandTotal;
 
-      // 每日上限檢核
       for (let day = 1; day <= daysCount; day++) {
+        const dStr = day < 10 ? `0${day}` : `${day}`;
+        const dateKey = `${year}-${mStr}-${dStr}`;
         const dateObj = new Date(year, month - 1, day);
         const weekDay = dateObj.getDay();
-        const isWeekday = (weekDay >= 1 && weekDay <= 5);
+        const isHoliday = !!HOLIDAYS[dateKey];
+        const isWeekday = (weekDay >= 1 && weekDay <= 5) && !isHoliday;
 
         let dailyOffCount = 0;
         teamMembers.forEach(m => {
@@ -1607,7 +1665,6 @@
       }
     }
 
-    // 匯出 CSV（含週期差額）
     function exportToCSV() {
       const year = yearSelect.value;
       const month = monthSelect.value;
