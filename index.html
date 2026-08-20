@@ -21,6 +21,10 @@
       --cover-text: #92400e;
       --danger-bg: #fca5a5;
       --danger-text: #7f1d1d;
+      
+      /* 值班專屬底色 */
+      --duty-primary-bg: #fef9c3;   /* 一線值班：柔和淺黃 */
+      --duty-secondary-bg: #e0f2fe; /* 二線值班：清爽淺藍 */
     }
     * {
       box-sizing: border-box;
@@ -63,7 +67,8 @@
     }
     .badge-mri { background: #e0f2fe; color: #0369a1; }
     .badge-ct { background: #fef3c7; color: #92400e; }
-    .badge-duty { background: #f3e8ff; color: #6b21a8; border: 1px solid #c084fc; }
+    .badge-duty-1 { background: #fef9c3; color: #854d0e; border: 1px solid #facc15; font-weight: bold; }
+    .badge-duty-2 { background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; font-weight: bold; }
     .badge-limit { background: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
     .badge-cloud { background: #dcfce7; color: #15803d; border: 1px solid #86efac; font-weight: bold; }
     
@@ -201,6 +206,14 @@
       font-weight: bold;
     }
 
+    /* 🌟 值班專屬格子底色樣式 */
+    .duty-cell-primary {
+      background-color: var(--duty-primary-bg) !important;
+    }
+    .duty-cell-secondary {
+      background-color: var(--duty-secondary-bg) !important;
+    }
+
     /* 休假分頁樣式 */
     .leave-cell {
       cursor: pointer;
@@ -231,7 +244,8 @@
       font-weight: bold;
     }
     .pos-label-ct { color: #92400e; background: #fefce8; }
-    .pos-label-duty { color: #6b21a8; background: #f3e8ff; border: 1px solid #d8b4fe; }
+    .pos-label-duty-1 { color: #854d0e; background: #fef08a; border: 1px solid #eab308; }
+    .pos-label-duty-2 { color: #075985; background: #bae6fd; border: 1px solid #38bdf8; }
     .pos-label-cover { color: var(--cover-text); background: var(--cover-bg); border: 1px dashed #d97706; }
     
     .shift-select {
@@ -259,9 +273,7 @@
     .stat-off { color: #dc2626; }
     .total-row { background-color: #f1f5f9; font-weight: bold; }
 
-    /* ============================================================== */
-    /* 🖥️ 電腦版螢幕專用優化 (寬度 >= 1024px 時自動放大，手機版不變) */
-    /* ============================================================== */
+    /* 電腦版螢幕專用優化 */
     @media (min-width: 1024px) {
       body {
         padding: 20px 24px;
@@ -285,7 +297,7 @@
         font-size: 15px;
       }
       table {
-        min-width: 2300px; /* 電腦版展開更寬，完整顯示代碼不被擠壓 */
+        min-width: 2300px;
         font-size: 14px;
       }
       th, td {
@@ -321,7 +333,7 @@
       .shift-select {
         font-size: 13px;
         padding: 3px 2px;
-        min-width: 72px; /* 確保 8C16C08 等完整字樣清楚可見 */
+        min-width: 72px;
       }
       .stat-col {
         min-width: 70px;
@@ -341,7 +353,8 @@
       <h1>醫學影像排班與休假系統</h1>
       <div class="rule-badges">
         <span class="rule-badge badge-cloud" id="syncStatus">⚡ Firebase 即時連線中</span>
-        <span class="rule-badge badge-duty">CT值班(4週循環)</span>
+        <span class="rule-badge badge-duty-1">🟡 一線值班(淺黃底)</span>
+        <span class="rule-badge badge-duty-2">🔵 二線值班(淺藍底)</span>
         <span class="rule-badge badge-ct">CT崗位月輪序</span>
         <span class="rule-badge badge-mri">MRI每週輪替</span>
         <span class="rule-badge badge-limit">⚠️ 上限 2 人 OFF</span>
@@ -439,7 +452,7 @@
     const MRI_WEEK_ROLES = [
       { pos: "1.5S", shift: "8C16C08" },
       { pos: "1.5S小夜", shift: "15C23C8" },
-      { pos: "1.5T", shift: "8-4C4-8" },
+      { pos: "1.5T", shift: "8H5on8" },
       { pos: "3T", shift: "8C16C08" },
       { pos: "1.5小夜", shift: "15C23C8" },
       { pos: "支援二", shift: "8H17C08" }
@@ -634,7 +647,6 @@
       }
     }
 
-    // ⚡ 監聽 Firebase 資料庫變化
     function listenToFirebaseData() {
       const year = parseInt(yearSelect.value);
       const month = parseInt(monthSelect.value);
@@ -705,10 +717,23 @@
           const box = document.createElement("div");
           box.className = "cell-box";
 
+          const posText = savedData[`pos_${m.id}_${day}`] || "";
           const posLabel = document.createElement("span");
-          posLabel.className = `pos-label ${m.type === 'CT' ? 'pos-label-ct' : ''}`;
           posLabel.id = `pos_${m.id}_${day}`;
-          posLabel.textContent = savedData[`pos_${m.id}_${day}`] || "";
+          posLabel.textContent = posText;
+
+          // 🌟 判斷值班底色與標籤樣式
+          let labelClass = "pos-label";
+          if (posText.includes("一線") || posText.includes("1.5T")) {
+            labelClass += " pos-label-duty-1";
+            td.classList.add("duty-cell-primary");
+          } else if (posText.includes("二線")) {
+            labelClass += " pos-label-duty-2";
+            td.classList.add("duty-cell-secondary");
+          } else if (m.type === 'CT') {
+            labelClass += " pos-label-ct";
+          }
+          posLabel.className = labelClass;
           box.appendChild(posLabel);
 
           const select = document.createElement("select");
@@ -894,6 +919,7 @@
       if (sup2Member) {
         const sup2Sel = document.querySelector(`.shift-select[data-member-id="${sup2Member.id}"][data-day="${day}"]`);
         const sup2Pos = document.getElementById(`pos_${sup2Member.id}_${day}`);
+        const sup2Td = document.getElementById(`r_td_${sup2Member.id}_${day}`);
         
         if (sup2Sel && sup2Sel.value !== "OFF") {
           if (mriOffPerson && mriOffRole) {
@@ -901,11 +927,16 @@
             sup2Pos.className = "pos-label pos-label-cover";
             sup2Sel.value = mriOffRole.shift;
             sup2Sel.className = `shift-select shift-${mriOffRole.shift}`;
+            if (sup2Td) {
+              if (mriOffRole.pos === "1.5T") sup2Td.classList.add("duty-cell-primary");
+              else sup2Td.classList.remove("duty-cell-primary", "duty-cell-secondary");
+            }
           } else {
             sup2Pos.textContent = "支援二";
             sup2Pos.className = "pos-label";
             sup2Sel.value = "8H17C08";
             sup2Sel.className = "shift-select shift-8H17C08";
+            if (sup2Td) sup2Td.classList.remove("duty-cell-primary", "duty-cell-secondary");
           }
         }
       }
@@ -926,29 +957,46 @@
       if (sup1Member) {
         const sup1Sel = document.querySelector(`.shift-select[data-member-id="${sup1Member.id}"][data-day="${day}"]`);
         const sup1Pos = document.getElementById(`pos_${sup1Member.id}_${day}`);
+        const sup1Td = document.getElementById(`r_td_${sup1Member.id}_${day}`);
 
         if (sup1Sel && sup1Sel.value !== "OFF") {
+          const dutyIdx = getCtDutyWeekIndex(dateObj);
+          const duty = CT_DUTY_CYCLES[dutyIdx];
+          const isPrimary = (duty.primary === "sup_zhida");
+          const isSecondary = (duty.secondary === "sup_zhida");
+
           if (ctOffMember) {
             sup1Pos.textContent = `代:${ctOffPos}`;
             sup1Pos.className = "pos-label pos-label-cover";
-            sup1Sel.value = "8C16C08";
-            sup1Sel.className = "shift-select shift-8C16C08";
+            sup1Sel.value = (isPrimary || isSecondary) ? "8H5on8" : "8H17C08";
+            sup1Sel.className = `shift-select shift-${sup1Sel.value}`;
           } else {
-            const dutyIdx = getCtDutyWeekIndex(dateObj);
-            const duty = CT_DUTY_CYCLES[dutyIdx];
             let dutyTag = "";
-            if (duty.primary === "sup_zhida") dutyTag = "|CT一線";
-            if (duty.secondary === "sup_zhida") dutyTag = "|CT二線";
+            let defaultShift = "8H17C08";
+            if (isPrimary) {
+              dutyTag = "|CT一線";
+              defaultShift = "8H5on8";
+            } else if (isSecondary) {
+              dutyTag = "|CT二線";
+              defaultShift = "8H5on8";
+            }
 
             sup1Pos.textContent = `支援一${dutyTag}`;
-            sup1Pos.className = `pos-label ${dutyTag ? 'pos-label-duty' : ''}`;
-            sup1Sel.value = sup1Member.defaultShift;
-            sup1Sel.className = `shift-select shift-${sup1Member.defaultShift}`;
+            sup1Pos.className = `pos-label ${isPrimary ? 'pos-label-duty-1' : (isSecondary ? 'pos-label-duty-2' : '')}`;
+            sup1Sel.value = defaultShift;
+            sup1Sel.className = `shift-select shift-${defaultShift}`;
+
+            if (sup1Td) {
+              sup1Td.classList.remove("duty-cell-primary", "duty-cell-secondary");
+              if (isPrimary) sup1Td.classList.add("duty-cell-primary");
+              if (isSecondary) sup1Td.classList.add("duty-cell-secondary");
+            }
           }
         }
       }
     }
 
+    // ⚡ 自動排班邏輯更新（含底色套用）
     function autoGenerateRoster() {
       const year = parseInt(yearSelect.value);
       const month = parseInt(monthSelect.value);
@@ -962,8 +1010,11 @@
           const weekDay = dateObj.getDay();
           const select = document.querySelector(`.shift-select[data-member-id="${m.id}"][data-day="${day}"]`);
           const posLabel = document.getElementById(`pos_${m.id}_${day}`);
+          const td = document.getElementById(`r_td_${m.id}_${day}`);
 
           const alreadyOff = (select.value === "OFF");
+
+          if (td) td.classList.remove("duty-cell-primary", "duty-cell-secondary");
 
           if (m.type === "MRI") {
             const weekOffset = getMriWeekOffset(dateObj);
@@ -971,39 +1022,87 @@
             const currentRole = MRI_WEEK_ROLES[roleIdx];
 
             posLabel.textContent = currentRole.pos;
-            posLabel.className = "pos-label";
+            
+            if (currentRole.pos === "1.5T") {
+              posLabel.className = "pos-label pos-label-duty-1";
+              if (td) td.classList.add("duty-cell-primary");
+            } else {
+              posLabel.className = "pos-label";
+            }
 
             if (!alreadyOff) {
               if (weekDay >= 1 && weekDay <= 5) {
                 select.value = currentRole.shift;
                 select.className = `shift-select shift-${currentRole.shift}`;
-              } else if (weekDay === 6 && currentRole.pos === "支援二") {
-                select.value = "8H17C08";
-                select.className = "shift-select shift-8H17C08";
-              } else {
-                select.value = "OFF";
-                select.className = "shift-select shift-OFF";
+              } else if (weekDay === 6) {
+                if (currentRole.pos === "1.5T") {
+                  select.value = "8-4C4-8";
+                  select.className = "shift-select shift-8-4C4-8";
+                } else if (currentRole.pos === "支援二") {
+                  select.value = "8H17C08";
+                  select.className = "shift-select shift-8H17C08";
+                } else {
+                  select.value = "OFF";
+                  select.className = "shift-select shift-OFF";
+                }
+              } else if (weekDay === 0) {
+                if (currentRole.pos === "1.5T") {
+                  select.value = "C8C8C24";
+                  select.className = "shift-select shift-C8C8C24";
+                } else {
+                  select.value = "OFF";
+                  select.className = "shift-select shift-OFF";
+                }
               }
             }
           } else {
+            // CT 組及支援一
             const dutyIdx = getCtDutyWeekIndex(dateObj);
             const duty = CT_DUTY_CYCLES[dutyIdx];
+            const isPrimary = (duty.primary === m.id);
+            const isSecondary = (duty.secondary === m.id);
+
             let dutyTag = "";
-            if (duty.primary === m.id) dutyTag = "|CT一線";
-            if (duty.secondary === m.id) dutyTag = "|CT二線";
+            if (isPrimary) dutyTag = "|CT一線";
+            if (isSecondary) dutyTag = "|CT二線";
 
             const basePos = (m.type === "CT") ? ctMonthlyPos : m.fixedPos;
             posLabel.textContent = `${basePos}${dutyTag}`;
-            posLabel.className = `pos-label ${dutyTag ? 'pos-label-duty' : (m.type === 'CT' ? 'pos-label-ct' : '')}`;
+            
+            if (isPrimary) {
+              posLabel.className = "pos-label pos-label-duty-1";
+              if (td) td.classList.add("duty-cell-primary");
+            } else if (isSecondary) {
+              posLabel.className = "pos-label pos-label-duty-2";
+              if (td) td.classList.add("duty-cell-secondary");
+            } else {
+              posLabel.className = `pos-label ${m.type === 'CT' ? 'pos-label-ct' : ''}`;
+            }
 
             if (!alreadyOff) {
               if (weekDay >= 1 && weekDay <= 5) {
-                const shift = (m.type === "CT") ? "8C16C08" : m.defaultShift;
+                const shift = (isPrimary || isSecondary) ? "8H5on8" : "8H17C08";
                 select.value = shift;
                 select.className = `shift-select shift-${shift}`;
-              } else {
-                select.value = "OFF";
-                select.className = "shift-select shift-OFF";
+              } else if (weekDay === 6) {
+                if (isPrimary) {
+                  select.value = "8-4C4-8";
+                  select.className = "shift-select shift-8-4C4-8";
+                } else if (isSecondary) {
+                  select.value = "C8C8C24";
+                  select.className = "shift-select shift-C8C8C24";
+                } else {
+                  select.value = "OFF";
+                  select.className = "shift-select shift-OFF";
+                }
+              } else if (weekDay === 0) {
+                if (isPrimary || isSecondary) {
+                  select.value = "C8C8C24";
+                  select.className = "shift-select shift-C8C8C24";
+                } else {
+                  select.value = "OFF";
+                  select.className = "shift-select shift-OFF";
+                }
               }
             }
           }
@@ -1017,7 +1116,7 @@
       saveData();
       renderLeaveBody();
       updateAllStats();
-      alert(`已成功帶入 ${year} 年 ${month} 月輪值（已同步儲存至 Firebase）！`);
+      alert(`已成功帶入 ${year} 年 ${month} 月輪值（已標記一線淺黃、二線淺藍值班底色）！`);
     }
 
     function saveData() {
