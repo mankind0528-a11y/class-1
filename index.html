@@ -27,6 +27,14 @@
       /* 值班專屬底色 */
       --duty-primary-bg: #fef9c3;   /* 一線值班 / 1.5T：柔和淺黃 */
       --duty-secondary-bg: #e0f2fe; /* 二線值班：清爽淺藍 */
+
+      /* 休假假別專屬色 */
+      --leave-lei-bg: #f3e8ff;
+      --leave-lei-text: #7e22ce;
+      --leave-xiu-bg: #fee2e2;
+      --leave-xiu-text: #b91c1c;
+      --leave-guo-bg: #ffedd5;
+      --leave-guo-text: #c2410c;
     }
     * {
       box-sizing: border-box;
@@ -133,12 +141,19 @@
     .btn-clear { background-color: #dc2626; }
     .btn-nav { background-color: #475569; padding: 6px 12px; }
 
-    /* 分頁頁籤 */
+    /* 分頁頁籤與畫休工具列 */
+    .tab-bar-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 8px;
+      border-bottom: 2px solid var(--primary);
+      margin-bottom: -1px;
+    }
     .tab-bar {
       display: flex;
       gap: 4px;
-      margin-bottom: -1px;
-      border-bottom: 2px solid var(--primary);
     }
     .tab-btn {
       padding: 10px 20px;
@@ -155,6 +170,36 @@
       background: var(--primary);
       color: white;
       border-color: var(--primary);
+    }
+
+    /* 🏖️ 畫休筆刷模式工具列 */
+    .leave-brush-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding-bottom: 6px;
+    }
+    .brush-label {
+      font-size: 12px;
+      font-weight: bold;
+      color: #334155;
+    }
+    .brush-btn {
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    .brush-lei { background: #f3e8ff; color: #7e22ce; border-color: #d8b4fe; }
+    .brush-xiu { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
+    .brush-guo { background: #ffedd5; color: #c2410c; border-color: #fdba74; }
+    .brush-clear { background: #f1f5f9; color: #475569; border-color: #cbd5e1; }
+    .brush-btn.active-brush {
+      box-shadow: 0 0 0 2px #0f172a;
+      transform: scale(1.05);
     }
 
     /* 表格容器 */
@@ -314,8 +359,13 @@
       transition: background-color 0.15s;
     }
     .leave-cell:hover { background-color: #e2e8f0; }
-    .leave-off { background-color: #fee2e2 !important; color: #b91c1c !important; }
-    .leave-cell.day-exceeded.leave-off { background-color: #f87171 !important; color: #ffffff !important; }
+    
+    .leave-off-lei { background-color: var(--leave-lei-bg) !important; color: var(--leave-lei-text) !important; font-weight: bold; }
+    .leave-off-xiu { background-color: var(--leave-xiu-bg) !important; color: var(--leave-xiu-text) !important; font-weight: bold; }
+    .leave-off-guo { background-color: var(--leave-guo-bg) !important; color: var(--leave-guo-text) !important; font-weight: bold; }
+    .leave-off-general { background-color: #fee2e2 !important; color: #b91c1c !important; font-weight: bold; }
+
+    .leave-cell.day-exceeded { background-color: #f87171 !important; color: #ffffff !important; }
 
     /* 排班分頁樣式 */
     .cell-box {
@@ -351,7 +401,10 @@
     }
     .shift-select:focus { outline: 2px solid var(--primary-light); background: #fff; }
     
-    .shift-OFF { background-color: #fee2e2; color: #b91c1c; font-weight: bold; }
+    /* 下拉選單各假別樣式 */
+    .shift-OFF, .shift-OFF-休 { background-color: #fee2e2 !important; color: #b91c1c !important; font-weight: bold; }
+    .shift-OFF-例 { background-color: #f3e8ff !important; color: #7e22ce !important; font-weight: bold; }
+    .shift-OFF-國 { background-color: #ffedd5 !important; color: #c2410c !important; font-weight: bold; }
     .shift-8C16C08 { color: #1d4ed8; }
     .shift-8-4C4-8 { color: #0e7490; }
     .shift-15C23C8 { color: #b45309; }
@@ -446,14 +499,14 @@
       .shift-select {
         font-size: 13px;
         padding: 3px 2px;
-        min-width: 72px;
+        min-width: 82px;
       }
       .stat-col {
         min-width: 70px;
         font-size: 14px;
       }
       .stat-cycle-deficit {
-        min-width: 130px;
+        min-width: 135px;
         font-size: 12px;
       }
       .holiday-tag {
@@ -497,9 +550,20 @@
   <!-- 變形工時週期即時提示條 -->
   <div class="cycle-info-bar" id="cycleInfoBar"></div>
 
-  <div class="tab-bar">
-    <button class="tab-btn active" id="tabRosterBtn" onclick="switchTab('roster')">📋 月排班表</button>
-    <button class="tab-btn" id="tabLeaveBtn" onclick="switchTab('leave')">🏖️ 畫休假登記表（點選標記OFF）</button>
+  <div class="tab-bar-container">
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tabRosterBtn" onclick="switchTab('roster')">📋 月排班表</button>
+      <button class="tab-btn" id="tabLeaveBtn" onclick="switchTab('leave')">🏖️ 畫休假登記表</button>
+    </div>
+
+    <!-- 🏖️ 畫休假專用假別按鈕列 -->
+    <div class="leave-brush-toolbar" id="leaveBrushToolbar" style="display: none;">
+      <span class="brush-label">畫休模式：</span>
+      <button class="brush-btn brush-lei active-brush" id="brushBtnLei" onclick="setLeaveBrush('OFF(例)')">🟣 例假</button>
+      <button class="brush-btn brush-xiu" id="brushBtnXiu" onclick="setLeaveBrush('OFF(休)')">🔴 休息日</button>
+      <button class="brush-btn brush-guo" id="brushBtnGuo" onclick="setLeaveBrush('OFF(國)')">🟠 國定假</button>
+      <button class="brush-btn brush-clear" id="brushBtnClear" onclick="setLeaveBrush('')">⚪ 清除</button>
+    </div>
   </div>
 
   <div class="table-wrapper" id="rosterSection">
@@ -569,7 +633,7 @@
     const db = firebase.database();
 
     // -------------------------------------------------------------
-    // 🇹🇼 2026 行政院公告國定假日清單 (可隨時在此新增/修改)
+    // 🇹🇼 2026 行政院公告國定假日清單
     // -------------------------------------------------------------
     const HOLIDAYS = {
       "2026-01-01": "元旦",
@@ -617,21 +681,43 @@
       return WORK_CYCLES.filter(c => !(c.end < firstDay || c.start > lastDay));
     }
 
-    // 計算週期差額公式 (差例、差休、差國)
-    function calculateCycleDeficit(actualOff, reqLei, reqXiu, reqGuo) {
+    // 計算週期差額公式 (差幾天例、差幾天休、差幾天國)
+    function calculateCycleDeficitDetails(counts, reqLei, reqXiu, reqGuo) {
+      let curLei = counts.lei || 0;
+      let curXiu = counts.xiu || 0;
+      let curGuo = counts.guo || 0;
+      let curGen = counts.general || 0;
+
+      if (curGen > 0) {
+        const needLei = Math.max(0, reqLei - curLei);
+        const addLei = Math.min(needLei, curGen);
+        curLei += addLei;
+        curGen -= addLei;
+      }
+      if (curGen > 0) {
+        const needXiu = Math.max(0, reqXiu - curXiu);
+        const addXiu = Math.min(needXiu, curGen);
+        curXiu += addXiu;
+        curGen -= addXiu;
+      }
+      if (curGen > 0) {
+        const needGuo = Math.max(0, reqGuo - curGuo);
+        const addGuo = Math.min(needGuo, curGen);
+        curGuo += addGuo;
+        curGen -= addGuo;
+      }
+
+      const diffLei = Math.max(0, reqLei - curLei);
+      const diffXiu = Math.max(0, reqXiu - curXiu);
+      const diffGuo = Math.max(0, reqGuo - curGuo);
+
+      const totalActual = curLei + curXiu + curGuo + curGen;
       const totalReq = reqLei + reqXiu + reqGuo;
-      if (actualOff >= totalReq) {
-        const surplus = actualOff - totalReq;
+
+      if (diffLei === 0 && diffXiu === 0 && diffGuo === 0) {
+        const surplus = totalActual - totalReq;
         return { isOk: true, text: surplus > 0 ? `🟢 達標 (+${surplus})` : `🟢 已滿` };
       }
-      
-      const diffLei = Math.max(0, reqLei - actualOff);
-      const remAfterLei = Math.max(0, actualOff - reqLei);
-
-      const diffXiu = Math.max(0, reqXiu - remAfterLei);
-      const remAfterXiu = Math.max(0, remAfterLei - reqXiu);
-
-      const diffGuo = Math.max(0, reqGuo - remAfterXiu);
 
       let parts = [];
       if (diffLei > 0) parts.push(`${diffLei}例`);
@@ -681,6 +767,9 @@
 
     const shiftTypes = [
       { code: "", name: "-" },
+      { code: "OFF(例)", name: "OFF(例)" },
+      { code: "OFF(休)", name: "OFF(休)" },
+      { code: "OFF(國)", name: "OFF(國)" },
       { code: "OFF", name: "OFF" },
       { code: "8C16C08", name: "8C16C08" },
       { code: "8-4C4-8", name: "8-4C4-8" },
@@ -760,22 +849,36 @@
       renderAll();
     }
 
+    let activeLeaveBrush = "OFF(例)";
+
+    function setLeaveBrush(brushType) {
+      activeLeaveBrush = brushType;
+      document.querySelectorAll(".brush-btn").forEach(b => b.classList.remove("active-brush"));
+      if (brushType === "OFF(例)") document.getElementById("brushBtnLei").classList.add("active-brush");
+      else if (brushType === "OFF(休)") document.getElementById("brushBtnXiu").classList.add("active-brush");
+      else if (brushType === "OFF(國)") document.getElementById("brushBtnGuo").classList.add("active-brush");
+      else document.getElementById("brushBtnClear").classList.add("active-brush");
+    }
+
     function switchTab(tab) {
       const rosterSec = document.getElementById("rosterSection");
       const leaveSec = document.getElementById("leaveSection");
       const tabRosterBtn = document.getElementById("tabRosterBtn");
       const tabLeaveBtn = document.getElementById("tabLeaveBtn");
+      const brushToolbar = document.getElementById("leaveBrushToolbar");
 
       if (tab === 'roster') {
         rosterSec.style.display = "block";
         leaveSec.style.display = "none";
         tabRosterBtn.classList.add("active");
         tabLeaveBtn.classList.remove("active");
+        brushToolbar.style.display = "none";
       } else {
         rosterSec.style.display = "none";
         leaveSec.style.display = "block";
         tabLeaveBtn.classList.add("active");
         tabRosterBtn.classList.remove("active");
+        brushToolbar.style.display = "flex";
       }
     }
 
@@ -830,7 +933,6 @@
       lDays.innerHTML = `<th class="col-name"></th><th class="col-group"></th>`;
       lFooter.innerHTML = `<th class="col-name">每日休假統計</th><th class="col-group">OFF人數</th>`;
 
-      // 1. 生成頂部週期膠囊
       let curCycle = null;
       let spanCount = 0;
 
@@ -855,7 +957,6 @@
         }
       }
 
-      // 2. 生成日期列與星期列（含國定假日判斷）
       for (let day = 1; day <= daysCount; day++) {
         const dStr = day < 10 ? `0${day}` : `${day}`;
         const dateKey = `${year}-${mStr}-${dStr}`;
@@ -924,7 +1025,6 @@
         lFooter.appendChild(thLCount);
       }
 
-      // 3. 附加右側統計欄位標頭
       const statSpanCount = 2 + activeCycles.length;
 
       const thRCycleStat = document.createElement("th");
@@ -993,6 +1093,27 @@
 
       rRow.appendChild(thR);
       lRow.appendChild(thL);
+    }
+
+    // ⚡ 正規化班別（將舊版 OFF 依日期自動升級）
+    function normalizeShiftVal(val, dateKey, weekDay) {
+      if (!val) return "";
+      if (val === "OFF") {
+        if (HOLIDAYS[dateKey]) return "OFF(國)";
+        if (weekDay === 0) return "OFF(例)";
+        if (weekDay === 6) return "OFF(休)";
+        return "OFF(休)";
+      }
+      return val;
+    }
+
+    function getShiftClass(val) {
+      if (!val) return "";
+      if (val === "OFF(例)") return "shift-OFF-例";
+      if (val === "OFF(休)") return "shift-OFF-休";
+      if (val === "OFF(國)") return "shift-OFF-國";
+      if (val.startsWith("OFF")) return "shift-OFF";
+      return `shift-${val}`;
     }
 
     function listenToFirebaseData() {
@@ -1108,15 +1229,18 @@
           });
 
           const key = `shift_${m.id}_${day}`;
-          if (savedData[key]) {
-            select.value = savedData[key];
-            select.classList.add(`shift-${savedData[key]}`);
+          const rawVal = savedData[key] || "";
+          const normalizedVal = normalizeShiftVal(rawVal, dateKey, weekDay);
+
+          if (normalizedVal) {
+            select.value = normalizedVal;
+            select.classList.add(getShiftClass(normalizedVal));
           }
 
           select.onchange = function() {
-            this.className = `shift-select ${this.value ? 'shift-' + this.value : ''}`;
+            this.className = `shift-select ${getShiftClass(this.value)}`;
             handleShiftChange(day);
-            syncLeaveCell(m.id, day, this.value === "OFF");
+            syncLeaveCell(m.id, day, this.value);
             saveData();
             updateAllStats();
           };
@@ -1204,17 +1328,12 @@
           }
 
           const shiftSel = document.querySelector(`.shift-select[data-member-id="${m.id}"][data-day="${day}"]`);
-          const isOff = shiftSel && shiftSel.value === "OFF";
+          const shiftVal = shiftSel ? shiftSel.value : "";
 
-          if (isOff) {
-            td.classList.add("leave-off");
-            td.textContent = "OFF";
-          } else {
-            td.textContent = "-";
-          }
+          applyLeaveCellStyle(td, shiftVal);
 
           td.onclick = function() {
-            toggleLeave(m.id, day);
+            toggleLeaveWithBrush(m.id, day);
           };
 
           tr.appendChild(td);
@@ -1238,42 +1357,57 @@
       });
     }
 
-    function toggleLeave(memberId, day) {
+    function applyLeaveCellStyle(td, shiftVal) {
+      td.classList.remove("leave-off-lei", "leave-off-xiu", "leave-off-guo", "leave-off-general");
+      if (shiftVal === "OFF(例)") {
+        td.classList.add("leave-off-lei");
+        td.textContent = "例";
+      } else if (shiftVal === "OFF(休)") {
+        td.classList.add("leave-off-xiu");
+        td.textContent = "休";
+      } else if (shiftVal === "OFF(國)") {
+        td.classList.add("leave-off-guo");
+        td.textContent = "國";
+      } else if (shiftVal && shiftVal.startsWith("OFF")) {
+        td.classList.add("leave-off-general");
+        td.textContent = "OFF";
+      } else {
+        td.textContent = "-";
+      }
+    }
+
+    function toggleLeaveWithBrush(memberId, day) {
       const shiftSel = document.querySelector(`.shift-select[data-member-id="${memberId}"][data-day="${day}"]`);
       const leaveTd = document.getElementById(`leave_${memberId}_${day}`);
-
       if (!shiftSel || !leaveTd) return;
 
-      const willBeOff = shiftSel.value !== "OFF";
-
-      if (willBeOff) {
-        shiftSel.value = "OFF";
-        shiftSel.className = "shift-select shift-OFF";
-        leaveTd.classList.add("leave-off");
-        leaveTd.textContent = "OFF";
+      let targetVal = "";
+      if (activeLeaveBrush) {
+        if (shiftSel.value === activeLeaveBrush) {
+          targetVal = "";
+        } else {
+          targetVal = activeLeaveBrush;
+        }
       } else {
-        shiftSel.value = "";
-        shiftSel.className = "shift-select";
-        leaveTd.classList.remove("leave-off");
-        leaveTd.textContent = "-";
+        if (shiftSel.value === "OFF(例)") targetVal = "OFF(休)";
+        else if (shiftSel.value === "OFF(休)") targetVal = "OFF(國)";
+        else if (shiftSel.value === "OFF(國)") targetVal = "";
+        else targetVal = "OFF(例)";
       }
+
+      shiftSel.value = targetVal;
+      shiftSel.className = `shift-select ${getShiftClass(targetVal)}`;
+      applyLeaveCellStyle(leaveTd, targetVal);
 
       handleShiftChange(day);
       saveData();
       updateAllStats();
     }
 
-    function syncLeaveCell(memberId, day, isOff) {
+    function syncLeaveCell(memberId, day, shiftVal) {
       const leaveTd = document.getElementById(`leave_${memberId}_${day}`);
       if (!leaveTd) return;
-
-      if (isOff) {
-        leaveTd.classList.add("leave-off");
-        leaveTd.textContent = "OFF";
-      } else {
-        leaveTd.classList.remove("leave-off");
-        leaveTd.textContent = "-";
-      }
+      applyLeaveCellStyle(leaveTd, shiftVal);
     }
 
     function handleShiftChange(day) {
@@ -1297,7 +1431,7 @@
 
         if (defaultRole.pos === "支援二") {
           sup2Member = m;
-        } else if (sel && sel.value === "OFF") {
+        } else if (sel && sel.value.startsWith("OFF")) {
           mriOffPerson = m;
           mriOffRole = defaultRole;
         }
@@ -1308,12 +1442,12 @@
         const sup2Pos = document.getElementById(`pos_${sup2Member.id}_${day}`);
         const sup2Td = document.getElementById(`r_td_${sup2Member.id}_${day}`);
         
-        if (sup2Sel && sup2Sel.value !== "OFF") {
+        if (sup2Sel && !sup2Sel.value.startsWith("OFF")) {
           if (mriOffPerson && mriOffRole) {
             sup2Pos.textContent = `代:${mriOffRole.pos}`;
             sup2Pos.className = "pos-label pos-label-cover";
             sup2Sel.value = mriOffRole.shift;
-            sup2Sel.className = `shift-select shift-${mriOffRole.shift}`;
+            sup2Sel.className = `shift-select ${getShiftClass(mriOffRole.shift)}`;
             if (sup2Td) {
               if (mriOffRole.pos === "1.5T") sup2Td.classList.add("duty-cell-primary");
               else sup2Td.classList.remove("duty-cell-primary", "duty-cell-secondary");
@@ -1335,7 +1469,7 @@
 
       ctMembers.forEach(m => {
         const sel = document.querySelector(`.shift-select[data-member-id="${m.id}"][data-day="${day}"]`);
-        if (sel && sel.value === "OFF") {
+        if (sel && sel.value.startsWith("OFF")) {
           ctOffMember = m;
           ctOffPos = getCtMonthlyPosition(m, year, month);
         }
@@ -1346,7 +1480,7 @@
         const sup1Pos = document.getElementById(`pos_${sup1Member.id}_${day}`);
         const sup1Td = document.getElementById(`r_td_${sup1Member.id}_${day}`);
 
-        if (sup1Sel && sup1Sel.value !== "OFF") {
+        if (sup1Sel && !sup1Sel.value.startsWith("OFF")) {
           const dutyIdx = getCtDutyWeekIndex(dateObj);
           const duty = CT_DUTY_CYCLES[dutyIdx];
           const isPrimary = (duty.primary === "sup_zhida");
@@ -1356,7 +1490,7 @@
             sup1Pos.textContent = `代:${ctOffPos}`;
             sup1Pos.className = "pos-label pos-label-cover";
             sup1Sel.value = (isPrimary || isSecondary) ? "8H5on8" : "8H17C08";
-            sup1Sel.className = `shift-select shift-${sup1Sel.value}`;
+            sup1Sel.className = `shift-select ${getShiftClass(sup1Sel.value)}`;
           } else {
             let dutyTag = "";
             let defaultShift = "8H17C08";
@@ -1371,7 +1505,7 @@
             sup1Pos.textContent = `支援一${dutyTag}`;
             sup1Pos.className = `pos-label ${isPrimary ? 'pos-label-duty-1' : (isSecondary ? 'pos-label-duty-2' : '')}`;
             sup1Sel.value = defaultShift;
-            sup1Sel.className = `shift-select shift-${defaultShift}`;
+            sup1Sel.className = `shift-select ${getShiftClass(defaultShift)}`;
 
             if (sup1Td) {
               sup1Td.classList.remove("duty-cell-primary", "duty-cell-secondary");
@@ -1383,7 +1517,7 @@
       }
     }
 
-    // ⚡ 自動排班邏輯（遇國定假日非值班自動排 OFF）
+    // ⚡ 自動排班邏輯（強制全面帶入 OFF(休)、OFF(例)、OFF(國)）
     function autoGenerateRoster() {
       const year = parseInt(yearSelect.value);
       const month = parseInt(monthSelect.value);
@@ -1403,8 +1537,6 @@
           const posLabel = document.getElementById(`pos_${m.id}_${day}`);
           const td = document.getElementById(`r_td_${m.id}_${day}`);
 
-          const alreadyOff = (select.value === "OFF");
-
           if (td) td.classList.remove("duty-cell-primary", "duty-cell-secondary");
 
           if (m.type === "MRI") {
@@ -1421,38 +1553,38 @@
               posLabel.className = "pos-label";
             }
 
-            if (!alreadyOff) {
-              if (weekDay >= 1 && weekDay <= 5) {
-                if (isHoliday && currentRole.pos !== "1.5T") {
-                  // 國定假日非值班崗位自動 OFF
-                  select.value = "OFF";
-                  select.className = "shift-select shift-OFF";
-                } else {
-                  select.value = currentRole.shift;
-                  select.className = `shift-select shift-${currentRole.shift}`;
-                }
-              } else if (weekDay === 6) {
-                if (currentRole.pos === "1.5T") {
-                  select.value = "8-4C4-8";
-                  select.className = "shift-select shift-8-4C4-8";
-                } else if (currentRole.pos === "支援二") {
-                  select.value = "8H17C08";
-                  select.className = "shift-select shift-8H17C08";
-                } else {
-                  select.value = "OFF";
-                  select.className = "shift-select shift-OFF";
-                }
-              } else if (weekDay === 0) {
-                if (currentRole.pos === "1.5T") {
-                  select.value = "C8C8C24";
-                  select.className = "shift-select shift-C8C8C24";
-                } else {
-                  select.value = "OFF";
-                  select.className = "shift-select shift-OFF";
-                }
+            if (weekDay >= 1 && weekDay <= 5) {
+              if (isHoliday && currentRole.pos !== "1.5T") {
+                select.value = "OFF(國)";
+                select.className = "shift-select shift-OFF-國";
+              } else {
+                select.value = currentRole.shift;
+                select.className = `shift-select ${getShiftClass(currentRole.shift)}`;
+              }
+            } else if (weekDay === 6) {
+              // 週六：1.5T 上班 8-4C4-8；支援二上班 8H17C08；其餘放假 OFF(休) / 國定假 OFF(國)
+              if (currentRole.pos === "1.5T") {
+                select.value = "8-4C4-8";
+                select.className = "shift-select shift-8-4C4-8";
+              } else if (currentRole.pos === "支援二") {
+                select.value = "8H17C08";
+                select.className = "shift-select shift-8H17C08";
+              } else {
+                select.value = isHoliday ? "OFF(國)" : "OFF(休)";
+                select.className = `shift-select ${getShiftClass(select.value)}`;
+              }
+            } else if (weekDay === 0) {
+              // 週日：1.5T 上班 C8C8C24；其餘放假 OFF(例) / 國定假 OFF(國)
+              if (currentRole.pos === "1.5T") {
+                select.value = "C8C8C24";
+                select.className = "shift-select shift-C8C8C24";
+              } else {
+                select.value = isHoliday ? "OFF(國)" : "OFF(例)";
+                select.className = `shift-select ${getShiftClass(select.value)}`;
               }
             }
           } else {
+            // CT 組及支援一
             const dutyIdx = getCtDutyWeekIndex(dateObj);
             const duty = CT_DUTY_CYCLES[dutyIdx];
             const isPrimary = (duty.primary === m.id);
@@ -1475,36 +1607,35 @@
               posLabel.className = `pos-label ${m.type === 'CT' ? 'pos-label-ct' : ''}`;
             }
 
-            if (!alreadyOff) {
-              if (weekDay >= 1 && weekDay <= 5) {
-                if (isHoliday && !isPrimary && !isSecondary) {
-                  // 國定假日非值班人員自動 OFF
-                  select.value = "OFF";
-                  select.className = "shift-select shift-OFF";
-                } else {
-                  const shift = (isPrimary || isSecondary) ? "8H5on8" : "8H17C08";
-                  select.value = shift;
-                  select.className = `shift-select shift-${shift}`;
-                }
-              } else if (weekDay === 6) {
-                if (isPrimary) {
-                  select.value = "8-4C4-8";
-                  select.className = "shift-select shift-8-4C4-8";
-                } else if (isSecondary) {
-                  select.value = "C8C8C24";
-                  select.className = "shift-select shift-C8C8C24";
-                } else {
-                  select.value = "OFF";
-                  select.className = "shift-select shift-OFF";
-                }
-              } else if (weekDay === 0) {
-                if (isPrimary || isSecondary) {
-                  select.value = "C8C8C24";
-                  select.className = "shift-select shift-C8C8C24";
-                } else {
-                  select.value = "OFF";
-                  select.className = "shift-select shift-OFF";
-                }
+            if (weekDay >= 1 && weekDay <= 5) {
+              if (isHoliday && !isPrimary && !isSecondary) {
+                select.value = "OFF(國)";
+                select.className = "shift-select shift-OFF-國";
+              } else {
+                const shift = (isPrimary || isSecondary) ? "8H5on8" : "8H17C08";
+                select.value = shift;
+                select.className = `shift-select ${getShiftClass(shift)}`;
+              }
+            } else if (weekDay === 6) {
+              // 週六：CT一線上班 8-4C4-8；CT二線 C8C8C24；其餘 OFF(休) / OFF(國)
+              if (isPrimary) {
+                select.value = "8-4C4-8";
+                select.className = "shift-select shift-8-4C4-8";
+              } else if (isSecondary) {
+                select.value = "C8C8C24";
+                select.className = "shift-select shift-C8C8C24";
+              } else {
+                select.value = isHoliday ? "OFF(國)" : "OFF(休)";
+                select.className = `shift-select ${getShiftClass(select.value)}`;
+              }
+            } else if (weekDay === 0) {
+              // 週日：CT一線、二線 C8C8C24；其餘 OFF(例) / OFF(國)
+              if (isPrimary || isSecondary) {
+                select.value = "C8C8C24";
+                select.className = "shift-select shift-C8C8C24";
+              } else {
+                select.value = isHoliday ? "OFF(國)" : "OFF(例)";
+                select.className = `shift-select ${getShiftClass(select.value)}`;
               }
             }
           }
@@ -1518,7 +1649,7 @@
       saveData();
       renderLeaveBody();
       updateAllStats();
-      alert(`已成功帶入 ${year} 年 ${month} 月輪值（已整合國定假日排班與週期差額計算）！`);
+      alert(`已成功帶入 ${year} 年 ${month} 月輪值（已成功更新 OFF(例)、OFF(休)、OFF(國) 及 CT一線週六上班）！`);
     }
 
     function saveData() {
@@ -1558,7 +1689,9 @@
         let offCount = 0;
 
         const cycleOffCounts = {};
-        activeCycles.forEach(c => cycleOffCounts[c.id] = 0);
+        activeCycles.forEach(c => {
+          cycleOffCounts[c.id] = { lei: 0, xiu: 0, guo: 0, general: 0 };
+        });
 
         for (let day = 1; day <= daysCount; day++) {
           const dStr = day < 10 ? `0${day}` : `${day}`;
@@ -1567,11 +1700,14 @@
 
           if (select) {
             const val = select.value;
-            if (val === "OFF") {
+            if (val.startsWith("OFF")) {
               offCount++;
               activeCycles.forEach(c => {
                 if (dateKey >= c.start && dateKey <= c.end) {
-                  cycleOffCounts[c.id]++;
+                  if (val === "OFF(例)") cycleOffCounts[c.id].lei++;
+                  else if (val === "OFF(休)") cycleOffCounts[c.id].xiu++;
+                  else if (val === "OFF(國)") cycleOffCounts[c.id].guo++;
+                  else cycleOffCounts[c.id].general++;
                 }
               });
             } else if (val !== "") {
@@ -1590,8 +1726,8 @@
         if (lElem) lElem.textContent = offCount;
 
         activeCycles.forEach(c => {
-          const actualCycleOff = cycleOffCounts[c.id] || 0;
-          const deficitResult = calculateCycleDeficit(actualCycleOff, c.reqLei, c.reqXiu, c.reqGuo);
+          const cCounts = cycleOffCounts[c.id];
+          const deficitResult = calculateCycleDeficitDetails(cCounts, c.reqLei, c.reqXiu, c.reqGuo);
 
           const rDefElem = document.getElementById(`cycle_deficit_${c.id}_${m.id}`);
           const lDefElem = document.getElementById(`leave_cycle_deficit_${c.id}_${m.id}`);
@@ -1625,7 +1761,7 @@
         let dailyOffCount = 0;
         teamMembers.forEach(m => {
           const select = document.querySelector(`.shift-select[data-member-id="${m.id}"][data-day="${day}"]`);
-          if (select && select.value === "OFF") {
+          if (select && select.value.startsWith("OFF")) {
             dailyOffCount++;
           }
         });
