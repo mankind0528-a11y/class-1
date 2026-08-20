@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>醫學影像10人團隊排班與休假系統（Firebase即時共用版）</title>
+  
+  <!-- Firebase SDK (使用 Realtime Database) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --primary-light: #2563eb;
+      --weekend-bg: #fee2e2;
+      --weekend-text: #991b1b;
+      --border-color: #cbd5e1;
+      --bg-color: #f8fafc;
+      --cover-bg: #fef3c7;
+      --cover-text: #92400e;
+      --danger-bg: #fca5a5;
+      --danger-text: #7f1d1d;
+    }
+    * {
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    body {
+      margin: 0;
+      padding: 16px;
+      background-color: var(--bg-color);
+      color: #0f172a;
+    }
+    .header-panel {
+      background: white;
+      padding: 14px 20px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      margin-bottom: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .title-area h1 {
+      margin: 0;
+      font-size: 1.3rem;
+      color: var(--primary);
+    }
+    .rule-badges {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+      flex-wrap: wrap;
+    }
+    .rule-badge {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    .badge-mri { background: #e0f2fe; color: #0369a1; }
+    .badge-ct { background: #fef3c7; color: #92400e; }
+    .badge-duty { background: #f3e8ff; color: #6b21a8; border: 1px solid #c084fc; }
+    .badge-limit { background: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
+    .badge-cloud { background: #dcfce7; color: #15803d; border: 1px solid #86efac; font-weight: bold; }
+    
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+    select, button, input {
+      padding: 6px 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 13px;
+    }
+    button {
+      background-color: var(--primary);
+      color: white;
+      cursor: pointer;
+      border: none;
+      font-weight: 500;
+      transition: opacity 0.2s;
+    }
+    button:hover { opacity: 0.9; }
+    .btn-auto { background-color: #4338ca; }
+    .btn-export { background-color: #059669; }
+    .btn-clear { background-color: #dc2626; }
+    .btn-nav { background-color: #475569; padding: 6px 12px; }
+
+    /* 分頁頁籤 */
+    .tab-bar {
+      display: flex;
+      gap: 4px;
+      margin-bottom: -1px;
+      border-bottom: 2px solid var(--primary);
+    }
+    .tab-btn {
+      padding: 10px 20px;
+      background: #e2e8f0;
+      color: #475569;
+      border: 1px solid var(--border-color);
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .tab-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    /* 表格容器 */
+    .table-wrapper {
+      background: white;
+      border-radius: 0 0 8px 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      overflow: auto;
+      border: 1px solid var(--border-color);
+      max-height: calc(100vh - 170px);
+    }
+    table {
+      border-collapse: separate;
+      border-spacing: 0;
+      width: 100%;
+      min-width: 1800px;
+      text-align: center;
+      font-size: 12px;
+    }
+    th, td {
+      border-right: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--border-color);
+      padding: 4px 2px;
+      white-space: nowrap;
+    }
+
+    /* 頂部日期與星期列固定 */
+    thead tr:nth-child(1) th {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background-color: #e2e8f0;
+      font-weight: 600;
+      height: 28px;
+    }
+    thead tr:nth-child(2) th {
+      position: sticky;
+      top: 28px;
+      z-index: 20;
+      background-color: #e2e8f0;
+      font-weight: 600;
+      height: 24px;
+    }
+
+    /* 左側固定欄位 */
+    .col-name {
+      position: sticky;
+      left: 0;
+      background-color: #f8fafc;
+      z-index: 10;
+      width: 85px;
+      min-width: 85px;
+      font-weight: bold;
+    }
+    .col-group {
+      position: sticky;
+      left: 85px;
+      background-color: #f8fafc;
+      z-index: 10;
+      width: 95px;
+      min-width: 95px;
+      border-right: 2px solid #94a3b8 !important;
+      font-size: 11px;
+    }
+
+    /* 左上角凍結焦點 */
+    thead tr:nth-child(1) th.col-name, thead tr:nth-child(1) th.col-group,
+    thead tr:nth-child(2) th.col-name, thead tr:nth-child(2) th.col-group {
+      z-index: 30 !important;
+      background-color: #cbd5e1 !important;
+    }
+
+    .weekend {
+      background-color: var(--weekend-bg) !important;
+      color: var(--weekend-text);
+    }
+    .week-divider {
+      border-right: 2px solid #64748b !important;
+    }
+
+    .day-exceeded {
+      background-color: var(--danger-bg) !important;
+      color: var(--danger-text) !important;
+      font-weight: bold;
+    }
+
+    /* 休假分頁樣式 */
+    .leave-cell {
+      cursor: pointer;
+      user-select: none;
+      height: 32px;
+      vertical-align: middle;
+      font-weight: bold;
+      transition: background-color 0.15s;
+    }
+    .leave-cell:hover { background-color: #e2e8f0; }
+    .leave-off { background-color: #fee2e2 !important; color: #b91c1c !important; }
+    .leave-cell.day-exceeded.leave-off { background-color: #f87171 !important; color: #ffffff !important; }
+
+    /* 排班分頁樣式 */
+    .cell-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .pos-label {
+      font-size: 9px;
+      color: #0369a1;
+      background: #f0f9ff;
+      border-radius: 2px;
+      padding: 0 2px;
+      line-height: 1.2;
+      font-weight: bold;
+    }
+    .pos-label-ct { color: #92400e; background: #fefce8; }
+    .pos-label-duty { color: #6b21a8; background: #f3e8ff; border: 1px solid #d8b4fe; }
+    .pos-label-cover { color: var(--cover-text); background: var(--cover-bg); border: 1px dashed #d97706; }
+    
+    .shift-select {
+      width: 100%;
+      border: 1px solid transparent;
+      background: transparent;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 0;
+      text-align-last: center;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .shift-select:focus { outline: 2px solid var(--primary-light); background: #fff; }
+    
+    .shift-OFF { background-color: #fee2e2; color: #b91c1c; font-weight: bold; }
+    .shift-8C16C08 { color: #1d4ed8; }
+    .shift-8-4C4-8 { color: #0e7490; }
+    .shift-15C23C8 { color: #b45309; }
+    .shift-C8C8C24 { color: #6d28d9; }
+    .shift-8H17C08 { color: #047857; }
+    .shift-8H5on8 { color: #4338ca; }
+
+    .stat-col { background-color: #f8fafc; font-weight: bold; min-width: 55px; }
+    .stat-off { color: #dc2626; }
+    .total-row { background-color: #f1f5f9; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <div class="header-panel">
+    <div class="title-area">
+      <h1>醫學影像排班與休假系統</h1>
+      <div class="rule-badges">
+        <span class="rule-badge badge-cloud" id="syncStatus">⚡ Firebase 即時連線中</span>
+        <span class="rule-badge badge-duty">CT值班(4週循環)</span>
+        <span class="rule-badge badge-ct">CT崗位月輪序</span>
+        <span class="rule-badge badge-mri">MRI每週輪替</span>
+        <span class="rule-badge badge-limit">⚠️ 上限 2 人 OFF</span>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="btn-nav" onclick="changeMonth(-1)">◀ 上個月</button>
+      <label>年份：<select id="yearSelect"></select></label>
+      <label>月份：<select id="monthSelect"></select></label>
+      <button class="btn-nav" onclick="changeMonth(1)">下個月 ▶</button>
+      <button onclick="renderAll()">重新整理</button>
+      <button class="btn-auto" onclick="autoGenerateRoster()">⚡ 一鍵自動帶入全月輪值</button>
+      <button class="btn-export" onclick="exportToCSV()">匯出 Excel (CSV)</button>
+      <button class="btn-clear" onclick="clearMonthData()">清空當月</button>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tabRosterBtn" onclick="switchTab('roster')">📋 月排班表</button>
+    <button class="tab-btn" id="tabLeaveBtn" onclick="switchTab('leave')">🏖️ 畫休假登記表（點選標記OFF）</button>
+  </div>
+
+  <div class="table-wrapper" id="rosterSection">
+    <table>
+      <thead>
+        <tr id="rosterHeaderDates">
+          <th class="col-name">成員姓名</th>
+          <th class="col-group">組別/主崗位</th>
+          <th class="stat-col">出勤天</th>
+          <th class="stat-col stat-off">OFF天</th>
+        </tr>
+        <tr id="rosterHeaderDays">
+          <th class="col-name"></th>
+          <th class="col-group"></th>
+          <th class="stat-col">天</th>
+          <th class="stat-col stat-off">天</th>
+        </tr>
+      </thead>
+      <tbody id="rosterBody"></tbody>
+    </table>
+  </div>
+
+  <div class="table-wrapper" id="leaveSection" style="display: none;">
+    <table>
+      <thead>
+        <tr id="leaveHeaderDates">
+          <th class="col-name">成員姓名</th>
+          <th class="col-group">組別/主崗位</th>
+          <th class="stat-col stat-off">休假總計</th>
+        </tr>
+        <tr id="leaveHeaderDays">
+          <th class="col-name"></th>
+          <th class="col-group"></th>
+          <th class="stat-col stat-off">天</th>
+        </tr>
+      </thead>
+      <tbody id="leaveBody"></tbody>
+      <tfoot>
+        <tr id="leaveFooterCount" class="total-row">
+          <th class="col-name">每日休假統計</th>
+          <th class="col-group">OFF人數</th>
+          <th class="stat-col stat-off" id="leaveMonthlyGrandTotal">0</th>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <script>
+    // -------------------------------------------------------------
+    // 🔥 Firebase 設定（已帶入你的專案 anwen-8b2fd）
+    // -------------------------------------------------------------
+    const firebaseConfig = {
+      apiKey: "AIzaSyADWikxpfwUIvDGwntKqu8G-16Pt456HPY",
+      authDomain: "anwen-8b2fd.firebaseapp.com",
+      databaseURL: "https://anwen-8b2fd-default-rtdb.firebaseio.com",
+      projectId: "anwen-8b2fd",
+      storageBucket: "anwen-8b2fd.firebasestorage.app",
+      messagingSenderId: "860211037286",
+      appId: "1:860211037286:web:cb4a6b5d1e219b086499a7",
+      measurementId: "G-N2CZDT5D18"
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.database();
+
+    // 基準設定
+    const BASE_MRI_DATE = new Date(2026, 4, 11);
+    const BASE_CT_YEAR = 2026;
+    const BASE_CT_MONTH = 8;
+    const BASE_CT_DUTY_DATE = new Date(2026, 7, 3);
+
+    const MRI_MEMBERS = ["碰", "任", "揮荃", "佳", "忠", "阿文"];
+    const MRI_WEEK_ROLES = [
+      { pos: "1.5S", shift: "8C16C08" },
+      { pos: "1.5S小夜", shift: "15C23C8" },
+      { pos: "1.5T", shift: "8-4C4-8" },
+      { pos: "3T", shift: "8C16C08" },
+      { pos: "1.5小夜", shift: "15C23C8" },
+      { pos: "支援二", shift: "8H17C08" }
+    ];
+
+    const CT_POS_CYCLE = ["RCT", "Angio", "256CT"];
+
+    const CT_DUTY_CYCLES = [
+      { primary: "ct_yuting", secondary: "ct_zhewei" },
+      { primary: "ct_yutai", secondary: "sup_zhida" },
+      { primary: "ct_zhewei", secondary: "ct_yuting" },
+      { primary: "sup_zhida", secondary: "ct_yutai" }
+    ];
+
+    const teamMembers = [
+      { id: "mri_0", name: "碰", group: "MRI週輪值", type: "MRI", mriIdx: 0 },
+      { id: "mri_1", name: "任", group: "MRI週輪值", type: "MRI", mriIdx: 1 },
+      { id: "mri_2", name: "揮荃", group: "MRI週輪值", type: "MRI", mriIdx: 2 },
+      { id: "mri_3", name: "佳", group: "MRI週輪值", type: "MRI", mriIdx: 3 },
+      { id: "mri_4", name: "忠", group: "MRI週輪值", type: "MRI", mriIdx: 4 },
+      { id: "mri_5", name: "阿文", group: "MRI週輪值", type: "MRI", mriIdx: 5 },
+      { id: "ct_yutai", name: "宇泰", group: "CT月輪值", type: "CT", basePosIdx: 2 },
+      { id: "ct_yuting", name: "宇廷", group: "CT月輪值", type: "CT", basePosIdx: 0 },
+      { id: "ct_zhewei", name: "哲維", group: "CT月輪值", type: "CT", basePosIdx: 1 },
+      { id: "sup_zhida", name: "志達", group: "支援一(固定)", type: "SUP1", fixedPos: "支援一", defaultShift: "8H17C08" }
+    ];
+
+    const shiftTypes = [
+      { code: "", name: "-" },
+      { code: "OFF", name: "OFF" },
+      { code: "8C16C08", name: "8C16C08" },
+      { code: "8-4C4-8", name: "8-4C4-8" },
+      { code: "15C23C8", name: "15C23C8" },
+      { code: "C8C8C24", name: "C8C8C24" },
+      { code: "8H17C08", name: "8H17C08" },
+      { code: "8H5on8", name: "8H5on8" }
+    ];
+
+    const weekDayNames = ["日", "一", "二", "三", "四", "五", "六"];
+
+    const yearSelect = document.getElementById("yearSelect");
+    const monthSelect = document.getElementById("monthSelect");
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth() + 1;
+
+    for (let y = currentYear - 1; y <= currentYear + 3; y++) {
+      const opt = document.createElement("option");
+      opt.value = y;
+      opt.textContent = `${y} 年`;
+      if (y === currentYear) opt.selected = true;
+      yearSelect.appendChild(opt);
+    }
+
+    for (let m = 1; m <= 12; m++) {
+      const opt = document.createElement("option");
+      opt.value = m;
+      opt.textContent = `${m} 月`;
+      if (m === currentMonth) opt.selected = true;
+      monthSelect.appendChild(opt);
+    }
+
+    function getDaysInMonth(year, month) {
+      return new Date(year, month, 0).getDate();
+    }
+
+    function getMriWeekOffset(dateObj) {
+      const day = dateObj.getDay();
+      const diffToMonday = (day === 0 ? -6 : 1) - day;
+      const monday = new Date(dateObj);
+      monday.setDate(dateObj.getDate() + diffToMonday);
+      monday.setHours(0, 0, 0, 0);
+
+      const diffTime = monday.getTime() - BASE_MRI_DATE.getTime();
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+      const weekIndex = Math.floor(diffDays / 7);
+      return ((weekIndex % 6) + 6) % 6;
+    }
+
+    function getCtDutyWeekIndex(dateObj) {
+      const day = dateObj.getDay();
+      const diffToMonday = (day === 0 ? -6 : 1) - day;
+      const monday = new Date(dateObj);
+      monday.setDate(dateObj.getDate() + diffToMonday);
+      monday.setHours(0, 0, 0, 0);
+
+      const diffTime = monday.getTime() - BASE_CT_DUTY_DATE.getTime();
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+      const weekIndex = Math.floor(diffDays / 7);
+      return ((weekIndex % 4) + 4) % 4;
+    }
+
+    function getCtMonthlyPosition(member, year, month) {
+      if (member.type === "SUP1") return "支援一";
+      const monthDiff = (year - BASE_CT_YEAR) * 12 + (month - BASE_CT_MONTH);
+      const posIdx = ((member.basePosIdx + monthDiff) % 3 + 3) % 3;
+      return CT_POS_CYCLE[posIdx];
+    }
+
+    function changeMonth(delta) {
+      let y = parseInt(yearSelect.value);
+      let m = parseInt(monthSelect.value) + delta;
+      if (m > 12) { m = 1; y++; }
+      if (m < 1) { m = 12; y--; }
+      yearSelect.value = y;
+      monthSelect.value = m;
+      renderAll();
+    }
+
+    function switchTab(tab) {
+      const rosterSec = document.getElementById("rosterSection");
+      const leaveSec = document.getElementById("leaveSection");
+      const tabRosterBtn = document.getElementById("tabRosterBtn");
+      const tabLeaveBtn = document.getElementById("tabLeaveBtn");
+
+      if (tab === 'roster') {
+        rosterSec.style.display = "block";
+        leaveSec.style.display = "none";
+        tabRosterBtn.classList.add("active");
+        tabLeaveBtn.classList.remove("active");
+      } else {
+        rosterSec.style.display = "none";
+        leaveSec.style.display = "block";
+        tabLeaveBtn.classList.add("active");
+        tabRosterBtn.classList.remove("active");
+      }
+    }
+
+    let currentListenerRef = null;
+
+    function renderAll() {
+      renderCalendarHeader();
+      listenToFirebaseData();
+    }
+
+    function renderCalendarHeader() {
+      const year = parseInt(yearSelect.value);
+      const month = parseInt(monthSelect.value);
+      const daysCount = getDaysInMonth(year, month);
+
+      const rDates = document.getElementById("rosterHeaderDates");
+      const rDays = document.getElementById("rosterHeaderDays");
+      const lDates = document.getElementById("leaveHeaderDates");
+      const lDays = document.getElementById("leaveHeaderDays");
+      const lFooter = document.getElementById("leaveFooterCount");
+
+      while (rDates.children.length > 4) rDates.removeChild(rDates.children[2]);
+      while (rDays.children.length > 4) rDays.removeChild(rDays.children[2]);
+      while (lDates.children.length > 3) lDates.removeChild(lDates.children[2]);
+      while (lDays.children.length > 3) lDays.removeChild(lDays.children[2]);
+      while (lFooter.children.length > 3) lFooter.removeChild(lFooter.children[2]);
+
+      for (let day = 1; day <= daysCount; day++) {
+        const dateObj = new Date(year, month - 1, day);
+        const weekDay = dateObj.getDay();
+        const isWeekend = (weekDay === 0 || weekDay === 6);
+        const isSunday = (weekDay === 0);
+
+        const thRDate = document.createElement("th");
+        thRDate.textContent = day;
+        thRDate.id = `r_th_date_${day}`;
+        if (isWeekend) thRDate.classList.add("weekend");
+        if (isSunday) thRDate.classList.add("week-divider");
+        rDates.insertBefore(thRDate, rDates.children[rDates.children.length - 2]);
+
+        const thRDay = document.createElement("th");
+        thRDay.textContent = weekDayNames[weekDay];
+        thRDay.id = `r_th_day_${day}`;
+        if (isWeekend) thRDay.classList.add("weekend");
+        if (isSunday) thRDay.classList.add("week-divider");
+        rDays.insertBefore(thRDay, rDays.children[rDays.children.length - 2]);
+
+        const thLDate = document.createElement("th");
+        thLDate.textContent = day;
+        thLDate.id = `l_th_date_${day}`;
+        if (isWeekend) thLDate.classList.add("weekend");
+        if (isSunday) thLDate.classList.add("week-divider");
+        lDates.insertBefore(thLDate, lDates.children[lDates.children.length - 1]);
+
+        const thLDay = document.createElement("th");
+        thLDay.textContent = weekDayNames[weekDay];
+        thLDay.id = `l_th_day_${day}`;
+        if (isWeekend) thLDay.classList.add("weekend");
+        if (isSunday) thLDay.classList.add("week-divider");
+        lDays.insertBefore(thLDay, lDays.children[lDays.children.length - 1]);
+
+        const thLCount = document.createElement("th");
+        thLCount.id = `l_day_count_${day}`;
+        thLCount.textContent = "0";
+        if (isWeekend) thLCount.classList.add("weekend");
+        if (isSunday) thLCount.classList.add("week-divider");
+        lFooter.insertBefore(thLCount, lFooter.children[lFooter.children.length - 1]);
+      }
+    }
+
+    // ⚡ 監聽 Firebase 資料庫變化（真正即時連線）
+    function listenToFirebaseData() {
+      const year = parseInt(yearSelect.value);
+      const month = parseInt(monthSelect.value);
+      const statusElem = document.getElementById("syncStatus");
+
+      if (currentListenerRef) {
+        currentListenerRef.off();
+      }
+
+      currentListenerRef = db.ref(`medical_roster/${year}_${month}`);
+      
+      if (statusElem) statusElem.textContent = "🟡 連線中...";
+
+      currentListenerRef.on('value', (snapshot) => {
+        const data = snapshot.val() || {};
+        localStorage.setItem(`team_roster_${year}_${month}`, JSON.stringify(data));
+        renderRosterBody();
+        renderLeaveBody();
+        updateAllStats();
+        if (statusElem) statusElem.textContent = "🟢 Firebase 即時同步中";
+      }, (err) => {
+        if (statusElem) statusElem.textContent = "🔴 連線失敗";
+      });
+    }
+
+    function renderRosterBody() {
+      const year = parseInt(yearSelect.value);
+      const month = parseInt(monthSelect.value);
+      const daysCount = getDaysInMonth(year, month);
+      const savedData = JSON.parse(localStorage.getItem(`team_roster_${year}_${month}`) || "{}");
+      const rosterBody = document.getElementById("rosterBody");
+
+      rosterBody.innerHTML = "";
+      teamMembers.forEach((m) => {
+        const tr = document.createElement("tr");
+        tr.dataset.memberId = m.id;
+
+        const tdName = document.createElement("td");
+        tdName.className = "col-name";
+        const nameInput = document.createElement("input");
+        nameInput.value = savedData[`name_${m.id}`] || m.name;
+        nameInput.style.width = "70px";
+        nameInput.onchange = () => { saveData(); renderLeaveBody(); };
+        tdName.appendChild(nameInput);
+        tr.appendChild(tdName);
+
+        const tdGroup = document.createElement("td");
+        tdGroup.className = "col-group";
+        if (m.type === "CT") {
+          const curPos = getCtMonthlyPosition(m, year, month);
+          tdGroup.textContent = `${curPos}(月)`;
+        } else {
+          tdGroup.textContent = m.group;
+        }
+        tr.appendChild(tdGroup);
+
+        for (let day = 1; day <= daysCount; day++) {
+          const td = document.createElement("td");
+          td.id = `r_td_${m.id}_${day}`;
+          const dateObj = new Date(year, month - 1, day);
+          const weekDay = dateObj.getDay();
+          const isWeekend = (weekDay === 0 || weekDay === 6);
+          const isSunday = (weekDay === 0);
+
+          if (isWeekend) td.classList.add("weekend");
+          if (isSunday) td.classList.add("week-divider");
+
+          const box = document.createElement("div");
+          box.className = "cell-box";
+
+          const posLabel = document.createElement("span");
+          posLabel.className = `pos-label ${m.type === 'CT' ? 'pos-label-ct' : ''}`;
+          posLabel.id = `pos_${m.id}_${day}`;
+          posLabel.textContent = savedData[`pos_${m.id}_${day}`] || "";
+          box.appendChild(posLabel);
+
+          const select = document.createElement("select");
+          select.className = "shift-select";
+          select.dataset.memberId = m.id;
+          select.dataset.day = day;
+
+          shiftTypes.forEach(st => {
+            const opt = document.createElement("option");
+            opt.value = st.code;
+            opt.textContent = st.name;
+            select.appendChild(opt);
+          });
+
+          const key = `shift_${m.id}_${day}`;
+          if (savedData[key]) {
+            select.value = savedData[key];
+            select.classList.add(`shift-${savedData[key]}`);
+          }
+
+          select.onchange = function() {
+            this.className = `shift-select ${this.value ? 'shift-' + this.value : ''}`;
+            handleShiftChange(day);
+            syncLeaveCell(m.id, day, this.value === "OFF");
+            saveData();
+            updateAllStats();
+          };
+
+          box.appendChild(select);
+          td.appendChild(box);
+          tr.appendChild(td);
+        }
+
+        const tdWorkDays = document.createElement("td");
+        tdWorkDays.id = `workdays_${m.id}`;
+        tdWorkDays.className = "stat-col";
+        tdWorkDays.textContent = "0";
+        tr.appendChild(tdWorkDays);
+
+        const tdOffDays = document.createElement("td");
+        tdOffDays.id = `offdays_${m.id}`;
+        tdOffDays.className = "stat-col stat-off";
+        tdOffDays.textContent = "0";
+        tr.appendChild(tdOffDays);
+
+        rosterBody.appendChild(tr);
+      });
+    }
+
+    function renderLeaveBody() {
+      const year = parseInt(yearSelect.value);
+      const month = parseInt(monthSelect.value);
+      const daysCount = getDaysInMonth(year, month);
+      const leaveBody = document.getElementById("leaveBody");
+
+      leaveBody.innerHTML = "";
+      teamMembers.forEach((m) => {
+        const tr = document.createElement("tr");
+        tr.dataset.memberId = m.id;
+
+        const nameInp = document.querySelector(`tr[data-member-id="${m.id}"] .col-name input`);
+        const currentName = nameInp ? nameInp.value : m.name;
+
+        const tdName = document.createElement("td");
+        tdName.className = "col-name";
+        tdName.textContent = currentName;
+        tr.appendChild(tdName);
+
+        const tdGroup = document.createElement("td");
+        tdGroup.className = "col-group";
+        if (m.type === "CT") {
+          const curPos = getCtMonthlyPosition(m, year, month);
+          tdGroup.textContent = `${curPos}(月)`;
+        } else {
+          tdGroup.textContent = m.group;
+        }
+        tr.appendChild(tdGroup);
+
+        for (let day = 1; day <= daysCount; day++) {
+          const td = document.createElement("td");
+          td.className = "leave-cell";
+          td.id = `leave_${m.id}_${day}`;
+          const dateObj = new Date(year, month - 1, day);
+          const weekDay = dateObj.getDay();
+          const isWeekend = (weekDay === 0 || weekDay === 6);
+          const isSunday = (weekDay === 0);
+
+          if (isWeekend) td.classList.add("weekend");
+          if (isSunday) td.classList.add("week-divider");
+
+          const shiftSel = document.querySelector(`.shift-select[data-member-id="${m.id}"][data-day="${day}"]`);
+          const isOff = shiftSel && shiftSel.value === "OFF";
+
+          if (isOff) {
+            td.classList.add("leave-off");
+            td.textContent = "OFF";
+          } else {
+            td.textContent = "-";
+          }
+
+          td.onclick = function() {
+            toggleLeave(m.id, day);
+          };
+
+          tr.appendChild(td);
+        }
+
+        const tdTotalOff = document.createElement("td");
+        tdTotalOff.id = `leave_total_${m.id}`;
+        tdTotalOff.className = "stat-col stat-off";
+        tdTotalOff.textContent = "0";
+        tr.appendChild(tdTotalOff);
+
+        leaveBody.appendChild(tr);
+      });
+    }
+
+    function toggleLeave(memberId, day) {
+      const shiftSel = document.querySelector(`.shift-select[data-member-id="${memberId}"][data-day="${day}"]`);
+      const leaveTd = document.getElementById(`leave_${memberId}_${day}`);
+
+      if (!shiftSel || !leaveTd) return;
+
+      const willBeOff = shiftSel.value !== "OFF";
+
+      if (willBeOff) {
+        shiftSel.value = "OFF";
+        shiftSel.className = "shift-select shift-OFF";
+        leaveTd.classList.add("leave-off");
+        leaveTd.textContent = "OFF";
+      } else {
+        shiftSel.value = "";
+        shiftSel.className = "shift-select";
+        leaveTd.classList.remove("leave-off");
+        leaveTd.textContent = "-";
+      }
+
+      handleShiftChange(day);
+      saveData();
+      updateAllStats();
+    }
+
+    function syncLeaveCell(memberId, day, isOff) {
+      const leaveTd = document.getElementById(`leave_${memberId}_${day}`);
+      if (!leaveTd) return;
+
+      if (isOff) {
+        leaveTd.classList.add("leave-off");
+        leaveTd.textContent = "OFF";
+      } else {
+        leaveTd.classList.remove("leave-off");
+        leaveTd.textContent = "-";
+      }
+    }
+
+    function handleShiftChange(day) {
+      const year = parseInt(yearSelect.value);
+      const month = parseInt(monthSelect.value);
+      const dateObj = new Date(year, month - 1, day);
+      const weekDay = dateObj.getDay();
+
+      if (weekDay < 1 || weekDay > 5) return;
+
+      const mriWeekOffset = getMriWeekOffset(dateObj);
+
+      let mriOffPerson = null;
+      let mriOffRole = null;
+      let sup2Member = null;
+
+      teamMembers.filter(m => m.type === "MRI").forEach(m => {
+        const roleIdx = (m.mriIdx + mriWeekOffset) % 6;
+        const defaultRole = MRI_WEEK_ROLES[roleIdx];
+        const sel = document.querySelector(`.shift-select[data-member-id="${m.id}"][data-day="${day}"]`);
+
+        if (defaultRole.pos === "支援二") {
+          sup2Member = m;
+        } else if (sel && sel.value === "OFF") {
+          mriOffPerson = m;
+          mriOffRole = defaultRole;
+        }
+      });
+
+      if (sup2Member) {
+        const sup2Sel = document.querySelector(`.shift-select[data-member-id="${sup2Member.id}"][data-day="${day}"]`);
+        const sup2Pos = document.getElementById(`pos_${sup2Member.id}_${day}`);
+        
+        if (sup2Sel && sup2Sel.value !== "OFF") {
+          if (mriOffPerson && mriOffRole) {
+            sup2Pos.textContent = `代:${mriOffRole.pos}`;
+            sup2Pos.className = "pos-label pos-label-cover";
+            sup2Sel.value = mriOffRole.shift;
+            sup2Sel.className = `shift-select shift-${mriOffRole.shift}`;
+          } else {
+            sup2Pos.textContent = "支援二";
+            sup2Pos.className = "pos-label";
+            sup2Sel.value = "8H17C08";
+            sup2Sel.className = "shift-select shift-8H17C08";
+          }
+        }
+      }
+
+      let ctOffMember = null;
+      let ctOffPos = null;
+      const ctMembers = teamMembers.filter(m => m.type === "CT");
+      const sup1Member = teamMembers.find(m => m.id === "sup_zhida");
+
+      ctMembers.forEach(m => {
+        const sel = document.querySelector(`.shift-select[data-member-id="${m.id}"][data-day="${day}"]`);
+        if (sel && sel.value === "OFF") {
+          ctOffMember = m;
+          ctOffPos = getCtMonthlyPosition(m, year, month);
+        }
+      });
+
+      if (sup1Member) {
+        const sup1Sel = document.querySelector(`.shift-select[data-member-id="${sup1Member.id}"][data-day="${day}"]`);
+        const sup1Pos = document.getElementById(`pos_${sup1Member.id}_${day}`);
+
+        if (sup1Sel && sup1Sel.value !== "OFF") {
+          if (ctOffMember) {
+            sup1Pos.textContent = `代:${ctOffPos}`;
+            sup1Pos.className = "pos-label pos-label-cover";
+            sup1Sel.value = "8C16C08";
+            sup1Sel.className = "shift-select shift-8C16C08";
+          } else {
+            const dutyIdx = getCtDutyWeekIndex(dateObj);
+            const duty = CT_DUTY_CYCLES[dutyIdx];
+            let dutyTag = "";
+            if (duty.primary === "sup_zhida") dutyTag = "|CT一線";
+            if (duty.secondary === "sup_zhida") dutyTag = "|CT二線";
+
+            sup1Pos.textContent = `支援一${dutyTag}`;
+            sup1Pos.className = `pos-label ${dutyTag ? 'pos-label-duty' : ''}`;
+            sup1Sel.value = sup1Member.defaultShift;
+            sup1Sel.className = `shift-select shift-${sup1Member.defaultShift}`;
+          }
+        }
+      }
+    }
+
+    function autoGenerateRoster() {
+      const year = parseInt(yearSelect.value);
+      const month = parseInt(monthSelect.value);
+      const daysCount = getDaysInMonth(year, month);
+
+      teamMembers.forEach(m => {
+        const ctMonthlyPos = (m.type === "CT") ? getCtMonthlyPosition(m, year, month) : "";
+
+        for (let day = 1; day <= daysCount; day++) {
+          const dateObj = new Date(year, month - 1, day);
+          const weekDay = dateObj.getDay();
+          const select = document.querySelector(`.shift-select[data-member-id="${m.id}"][data-day="${day}"]`);
+          const posLabel = document.getElementById(`pos_${m.id}_${day}`);
+
+          const alreadyOff = (select.value === "OFF");
+
+          if (m.type === "MRI") {
+            const weekOffset = getMriWeekOffset(dateObj);
+            const roleIdx = (m.mriIdx + weekOffset) % 6;
+            const currentRole = MRI_WEEK_ROLES[roleIdx];
+
+            posLabel.textContent = currentRole.pos;
+            posLabel.className = "pos-label";
+
+            if (!alreadyOff) {
+              if (weekDay >= 1 && weekDay <= 5) {
+                select.value = currentRole.shift;
+                select.className = `shift-select shift-${currentRole.shift}`;
+              } else if (weekDay === 6 && currentRole.pos === "支援二") {
+                select.value = "8H17C08";
+                select.className = "shift-select shift-8H17C08";
+              } else {
+                select.value = "OFF";
+                select.className = "shift-select shift-OFF";
+              }
+            }
+          } else {
+            const dutyIdx = getCtDutyWeekIndex(dateObj);
+            const duty = CT_DUTY_CYCLES[dutyIdx];
+            let dutyTag = "";
+            if (duty.primary === m.id) dutyTag = "|CT一線";
+            if (duty.secondary === m.id) dutyTag = "|CT二線";
+
+            const basePos = (m.type === "CT") ? ctMonthlyPos : m.fixedPos;
+            posLabel.textContent = `${basePos}${dutyTag}`;
+            posLabel.className = `pos-label ${dutyTag ? 'pos-label-duty' : (m.type === 'CT' ? 'pos-label-ct' : '')}`;
+
+            if (!alreadyOff) {
+              if (weekDay >= 1 && weekDay <= 5) {
+                const shift = (m.type === "CT") ? "8C16C08" : m.defaultShift;
+                select.value = shift;
+                select.className = `shift-select shift-${shift}`;
+              } else {
+                select.value = "OFF";
+                select.className = "shift-select shift-OFF";
+              }
+            }
+          }
+        }
+      });
+
+      for (let day = 1; day <= daysCount; day++) {
+        handleShiftChange(day);
+      }
+
+      saveData();
+      renderLeaveBody();
+      updateAllStats();
+      alert(`已成功帶入 ${year} 年 ${month} 月輪值（已同步儲存至 Firebase）！`);
+    }
+
+    // ⚡ 儲存至 Firebase
+    function saveData() {
+      const year = parseInt(yearSelect.value);
+      const month = parseInt(monthSelect.value);
+      const data = {};
+
+      const selects = document.querySelectorAll(".shift-select");
+      selects.forEach(s => {
+        data[`shift_${s.dataset.memberId}_${s.dataset.day}`] = s.value;
+      });
+
+      const posLabels = document.querySelectorAll(".pos-label");
+      posLabels.forEach(p => {
+        data[p.id] = p.textContent;
+      });
+
+      teamMembers.forEach(m => {
+        const inp = document.querySelector(`tr[data-member-id="${m.id}"] .col-name input`);
+        if (inp) data[`name_${m.id}`] = inp.value;
+      });
+
+      localStorage.setItem(`team_roster_${year}_${month}`, JSON.stringify(data));
+      db.ref(`medical_roster/${year}_${month}`).set(data);
+    }
+
+    function updateAllStats() {
+      const year = parseInt(yearSelect.value);
+      const month = parseInt(monthSelect.value);
+      const daysCount = getDaysInMonth(year, month);
+      let monthlyGrandTotal = 0;
+
+      teamMembers.forEach(m => {
+        let workCount = 0;
+        let offCount = 0;
+
+        for (let day = 1; day <= daysCount; day++) {
+          const select = document.querySelector(`.shift-select[data-member-id="${m.id}"][data-day="${day}"]`);
+          if (select) {
+            const val = select.value;
+            if (val === "OFF") {
+              offCount++;
+            } else if (val !== "") {
+              workCount++;
+            }
+          }
+        }
+
+        monthlyGrandTotal += offCount;
+        const wElem = document.getElementById(`workdays_${m.id}`);
+        const oElem = document.getElementById(`offdays_${m.id}`);
+        const lElem = document.getElementById(`leave_total_${m.id}`);
+
+        if (wElem) wElem.textContent = workCount;
+        if (oElem) oElem.textContent = offCount;
+        if (lElem) lElem.textContent = offCount;
+      });
+
+      const grandTotalElem = document.getElementById("leaveMonthlyGrandTotal");
+      if (grandTotalElem) grandTotalElem.textContent = monthlyGrandTotal;
+
+      for (let day = 1; day <= daysCount; day++) {
+        const dateObj = new Date(year, month - 1, day);
+        const weekDay = dateObj.getDay();
+        const isWeekday = (weekDay >= 1 && weekDay <= 5);
+
+        let dailyOffCount = 0;
+        teamMembers.forEach(m => {
+          const select = document.querySelector(`.shift-select[data-member-id="${m.id}"][data-day="${day}"]`);
+          if (select && select.value === "OFF") {
+            dailyOffCount++;
+          }
+        });
+
+        const countTd = document.getElementById(`l_day_count_${day}`);
+        if (countTd) countTd.textContent = dailyOffCount;
+
+        const isExceeded = isWeekday && (dailyOffCount > 2);
+
+        const applyExceededStyle = (elem, add) => {
+          if (!elem) return;
+          if (add) elem.classList.add("day-exceeded");
+          else elem.classList.remove("day-exceeded");
+        };
+
+        applyExceededStyle(document.getElementById(`l_th_date_${day}`), isExceeded);
+        applyExceededStyle(document.getElementById(`l_th_day_${day}`), isExceeded);
+        applyExceededStyle(countTd, isExceeded);
+
+        applyExceededStyle(document.getElementById(`r_th_date_${day}`), isExceeded);
+        applyExceededStyle(document.getElementById(`r_th_day_${day}`), isExceeded);
+
+        teamMembers.forEach(m => {
+          applyExceededStyle(document.getElementById(`leave_${m.id}_${day}`), isExceeded);
+          applyExceededStyle(document.getElementById(`r_td_${m.id}_${day}`), isExceeded);
+        });
+      }
+    }
+
+    function clearMonthData() {
+      if (confirm("確定要清空當月的排班與休假資料嗎？")) {
+        const year = parseInt(yearSelect.value);
+        const month = parseInt(monthSelect.value);
+        localStorage.removeItem(`team_roster_${year}_${month}`);
+        db.ref(`medical_roster/${year}_${month}`).remove();
+        renderAll();
+      }
+    }
+
+    function exportToCSV() {
+      const year = yearSelect.value;
+      const month = monthSelect.value;
+      const daysCount = getDaysInMonth(year, month);
+      
+      let csvContent = "\uFEFF";
+      
+      let row1 = ["成員姓名", "組別/主崗位"];
+      for (let d = 1; d <= daysCount; d++) row1.push(`${month}/${d}`);
+      row1.push("出勤天數", "OFF天數");
+      csvContent += row1.join(",") + "\r\n";
+
+      let row2 = ["", ""];
+      for (let d = 1; d <= daysCount; d++) {
+        const weekDay = new Date(year, month - 1, d).getDay();
+        row2.push(weekDayNames[weekDay]);
+      }
+      row2.push("", "");
+      csvContent += row2.join(",") + "\r\n";
+
+      const rows = document.querySelectorAll("#rosterBody tr");
+      rows.forEach(r => {
+        let rowData = [];
+        const name = r.querySelector(".col-name input").value;
+        const group = r.querySelector(".col-group").textContent;
+        rowData.push(`"${name}"`, `"${group}"`);
+
+        const cells = r.querySelectorAll(".cell-box");
+        cells.forEach(c => {
+          const pos = c.querySelector(".pos-label").textContent;
+          const shift = c.querySelector(".shift-select").value;
+          rowData.push(`"${pos ? '['+pos+'] ' : ''}${shift}"`);
+        });
+
+        const workDays = r.querySelector("[id^='workdays_']").textContent;
+        const offDays = r.querySelector("[id^='offdays_']").textContent;
+        rowData.push(workDays, offDays);
+
+        csvContent += rowData.join(",") + "\r\n";
+      });
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute("download", `${year}年${month}月_醫學影像排班與休假表.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    yearSelect.addEventListener("change", renderAll);
+    monthSelect.addEventListener("change", renderAll);
+    window.onload = renderAll;
+  </script>
+</body>
+</html>
