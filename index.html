@@ -384,7 +384,7 @@
     .shift-8C16C08 { color: #1d4ed8; font-weight: 600; }
     .shift-8-4C4-8 { color: #0e7490; font-weight: 600; }
     .shift-15C23C8 { color: #b45309; font-weight: 600; }
-    .shift-C8C8C24 { color: #6d28d9; font-weight: 600; }
+    .shift-C8C8C24, .shift-C8C8C24-休 { color: #6d28d9; font-weight: 600; }
     .shift-8H17C08 { color: #047857; font-weight: 600; }
     .shift-8H5on8 { color: #4338ca; font-weight: 600; }
 
@@ -418,8 +418,8 @@
     }
     .modal-content {
       background: white;
-      width: 90%;
-      max-width: 780px;
+      width: 92%;
+      max-width: 820px;
       border-radius: 12px;
       box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
       display: flex;
@@ -453,7 +453,7 @@
     }
     .modal-body textarea {
       width: 100%;
-      height: 380px;
+      height: 420px;
       padding: 12px;
       font-size: 13.5px;
       line-height: 1.6;
@@ -505,7 +505,7 @@
         <span class="rule-badge badge-cloud" id="syncStatus">⚡ Firebase 即時連線中</span>
         <span class="rule-badge badge-cycle-red">🟥 週期(紅)</span>
         <span class="rule-badge badge-cycle-blue">🟦 週期(淺藍)</span>
-        <span class="rule-badge badge-duty-1">🟡 CT一線/1.5T週六8-4C4-8、日C8C8C24</span>
+        <span class="rule-badge badge-duty-1">🟡 CT一線/1.5T週六8-4C4-8、日C8C8C24(休)</span>
         <span class="rule-badge badge-duty-2">🔵 CT二線(淺藍底)</span>
         <span class="rule-badge badge-ct">CT崗位月輪序</span>
         <span class="rule-badge badge-mri">MRI每週輪替</span>
@@ -771,7 +771,7 @@
       { code: "8C16C08", name: "8C16C08" },
       { code: "8-4C4-8", name: "8-4C4-8" },
       { code: "15C23C8", name: "15C23C8" },
-      { code: "C8C8C24", name: "C8C8C24" },
+      { code: "C8C8C24(休)", name: "C8C8C24(休)" },
       { code: "8H17C08", name: "8H17C08" },
       { code: "8H5on8", name: "8H5on8" }
     ];
@@ -1126,6 +1126,7 @@
       if (val === "OFF(國)") return "shift-OFF-國";
       if (val === "OFF(特)") return "shift-OFF-特";
       if (val.startsWith("OFF")) return "shift-OFF";
+      if (val === "C8C8C24(休)" || val === "C8C8C24") return "shift-C8C8C24";
       return `shift-${val}`;
     }
 
@@ -1249,6 +1250,8 @@
             else if (weekDay === 0) currentVal = "OFF(例)";
             else if (weekDay === 6) currentVal = "OFF(休)";
             else currentVal = "OFF(休)";
+          } else if (currentVal === "C8C8C24") {
+            currentVal = "C8C8C24(休)";
           }
 
           if (currentVal) {
@@ -1394,7 +1397,7 @@
       if (shiftVal === "OFF(例)") {
         td.classList.add("leave-off-lei");
         td.textContent = "例";
-      } else if (shiftVal === "OFF(休)") {
+      } else if (shiftVal === "OFF(休)" || shiftVal === "C8C8C24(休)" || shiftVal === "C8C8C24") {
         td.classList.add("leave-off-xiu");
         td.textContent = "休";
       } else if (shiftVal === "OFF(國)") {
@@ -1451,6 +1454,13 @@
       const month = parseInt(monthSelect.value);
       const dateObj = new Date(year, month - 1, day);
       const weekDay = dateObj.getDay();
+
+      teamMembers.forEach(m => {
+        const sel = document.querySelector(`.shift-select[data-member-id="${m.id}"][data-day="${day}"]`);
+        if (sel) {
+          syncLeaveCell(m.id, day, sel.value);
+        }
+      });
 
       if (weekDay < 1 || weekDay > 5) return;
 
@@ -1600,7 +1610,7 @@
                 }
               } else if (weekDay === 0) {
                 if (currentRole.pos === "1.5T") {
-                  monthData[`shift_${tm.id}_${day}`] = "C8C8C24";
+                  monthData[`shift_${tm.id}_${day}`] = "C8C8C24(休)";
                 } else {
                   monthData[`shift_${tm.id}_${day}`] = isHoliday ? "OFF(國)" : "OFF(例)";
                 }
@@ -1628,13 +1638,13 @@
                 if (isPrimary) {
                   monthData[`shift_${tm.id}_${day}`] = "8-4C4-8";
                 } else if (isSecondary) {
-                  monthData[`shift_${tm.id}_${day}`] = "C8C8C24";
+                  monthData[`shift_${tm.id}_${day}`] = "C8C8C24(休)";
                 } else {
                   monthData[`shift_${tm.id}_${day}`] = isHoliday ? "OFF(國)" : "OFF(休)";
                 }
               } else if (weekDay === 0) {
                 if (isPrimary || isSecondary) {
-                  monthData[`shift_${tm.id}_${day}`] = "C8C8C24";
+                  monthData[`shift_${tm.id}_${day}`] = "C8C8C24(休)";
                 } else {
                   monthData[`shift_${tm.id}_${day}`] = isHoliday ? "OFF(國)" : "OFF(例)";
                 }
@@ -1709,18 +1719,22 @@
 
           if (select) {
             const val = select.value;
-            if (val.startsWith("OFF")) {
+            const isOffShift = val.startsWith("OFF") || val === "C8C8C24(休)" || val === "C8C8C24";
+
+            // 當班別為 OFF 假別或 C8C8C24(休) 時，計入休假天數統計
+            if (isOffShift) {
               offCount++;
               activeCycles.forEach(c => {
                 if (dateKey >= c.start && dateKey <= c.end) {
                   if (val === "OFF(例)") cycleOffCounts[c.id].lei++;
-                  else if (val === "OFF(休)") cycleOffCounts[c.id].xiu++;
+                  else if (val === "OFF(休)" || val === "C8C8C24(休)" || val === "C8C8C24") cycleOffCounts[c.id].xiu++;
                   else if (val === "OFF(國)") cycleOffCounts[c.id].guo++;
                   else if (val === "OFF(特)") cycleOffCounts[c.id].te++;
                   else cycleOffCounts[c.id].general++;
                 }
               });
             } else if (val !== "") {
+              // 只有非休假出勤班別才計入上班天數與每班 +8 小時工時
               workCount++;
               activeCycles.forEach(c => {
                 if (dateKey >= c.start && dateKey <= c.end) {
@@ -1807,7 +1821,7 @@
         let dailyOffCount = 0;
         teamMembers.forEach(m => {
           const select = document.querySelector(`.shift-select[data-member-id="${m.id}"][data-day="${day}"]`);
-          if (select && select.value.startsWith("OFF")) {
+          if (select && (select.value.startsWith("OFF") || select.value === "C8C8C24(休)" || select.value === "C8C8C24")) {
             dailyOffCount++;
           }
         });
@@ -1838,9 +1852,52 @@
     }
 
     // -------------------------------------------------------------
-    // 📜 武功秘笈（規則筆記管理 + 密碼 0811 保護）
+    // 📜 武功秘笈（規則筆記管理 + 密碼 0811 保護 + 預設科內規則）
     // -------------------------------------------------------------
     const SECRET_PASSWORD = "0811";
+
+    const DEFAULT_SECRET_RULES = 
+`【醫學影像 10 人團隊排班武功秘笈】
+
+一、 團隊編制與組別分配
+1. MRI 組（6人週輪值）：碰、任、揮荃、佳、忠、阿文
+2. CT 組（3人月輪值）：宇泰、宇廷、哲維
+3. 支援組（1人固定）：志達（固定支援一，配合 CT 一/二線值班輪替）
+
+二、 崗位輪值機制
+1. MRI 週輪值崗位順序（以 2026/05/11 基準週循環）：
+   - 1.5S (8C16C08)
+   - 1.5S小夜 (15C23C8)
+   - 1.5T (8-4C4-8) ➜ 週六 8-4C4-8、週日 C8C8C24(休)（值班底色：黃底）
+   - 3T (8C16C08)
+   - 1.5小夜 (15C23C8)
+   - 支援二 (8H17C08) ➜ 週六支援 8-4C4-8
+2. CT 月輪值崗位順序（以 2026/08 基準月循環）：
+   - RCT ➜ Angio ➜ 256CT
+3. CT 週末/夜間值班 4 週輪替（以 2026/08/03 基準週循環）：
+   - 第1週：宇廷(一線) / 哲維(二線)
+   - 第2週：宇泰(一線) / 志達(二線)
+   - 第3週：哲維(一線) / 宇廷(二線)
+   - 第4週：志達(一線) / 宇泰(二線)
+
+三、 代班與畫休連動規則
+1. MRI 平日請假：當值「支援二」的人員自動代班該請假人員之崗位與班別（標示「代:崗位」）。
+2. CT 平日請假：由「志達 (支援一)」自動代班該請假人員之月崗位（標示「代:崗位」）。
+3. 平日（週一至週五，扣除國定假日）全科 OFF 人數上限為 2 人，超過 2 人時表格顯示紅底警告。
+4. 當排班遇到 C8C8C24(休) 時，系統自動排上 (休) 的假別，視同休假，因此上班總時數不 +8 小時。
+
+四、 變形工時 4 週週期與應上班工時（僅非休假之出勤班次每班 +8 小時）
+- 週期10 (08/31 ~ 09/27，紅)：需 4例、4休、1國 (共9天) ｜ 應上班時數：152 hr
+- 週期11 (09/28 ~ 10/25，藍)：需 4例、4休、2國 (共10天) ｜ 應上班時數：144 hr
+- 週期12 (10/26 ~ 11/22，紅)：需 4例、4休、1國 (共9天) ｜ 應上班時數：152 hr
+- 週期13 (11/23 ~ 12/20，藍)：需 4例、4休、0國 (共8天) ｜ 應上班時數：160 hr
+
+五、 假別標示代碼
+- OFF(例)：例假 (紫色)
+- OFF(休)：休息日 (紅色)
+- OFF(國)：國定假日 (橘色)
+- OFF(特)：特別休假 (綠色)
+- C8C8C24(休)：週末值班/自動排休 (紫色字體，不計入工時)`;
 
     function openRulesModal() {
       const inputPwd = prompt("🔑 請輸入武功秘笈通關密碼：");
@@ -1850,7 +1907,7 @@
         return;
       }
       
-      const localRules = localStorage.getItem("team_rules_cheatsheet") || "";
+      const localRules = localStorage.getItem("team_rules_cheatsheet") || DEFAULT_SECRET_RULES;
       document.getElementById("rulesContent").value = localRules;
       document.getElementById("rulesModal").style.display = "flex";
     }
@@ -1872,7 +1929,10 @@
 
     function listenToRulesData() {
       db.ref("team_rules/cheatsheet").on('value', (snapshot) => {
-        const val = snapshot.val() || "";
+        let val = snapshot.val();
+        if (!val) {
+          val = DEFAULT_SECRET_RULES;
+        }
         localStorage.setItem("team_rules_cheatsheet", val);
         const rulesTextarea = document.getElementById("rulesContent");
         if (rulesTextarea && document.getElementById("rulesModal").style.display !== "flex") {
