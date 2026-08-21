@@ -141,7 +141,7 @@
     .btn-save { background-color: #0284c7; font-weight: bold; }
     .btn-auto { background-color: #4338ca; font-weight: 600; }
     .btn-export { background-color: #059669; }
-    .btn-clear { background-color: #dc2626; }
+    .btn-secret { background-color: #d97706; font-weight: bold; }
     .btn-nav { background-color: #475569; padding: 6px 12px; }
 
     /* 分頁頁籤與畫休工具列 */
@@ -175,7 +175,7 @@
       border-color: var(--primary);
     }
 
-    /* 🏖️ 畫休筆刷模式工具列（含特休） */
+    /* 🏖️ 畫休筆刷模式工具列 */
     .leave-brush-toolbar {
       display: flex;
       align-items: center;
@@ -220,7 +220,7 @@
       border-collapse: separate;
       border-spacing: 0;
       width: 100%;
-      min-width: 2150px;
+      min-width: 2650px;
       text-align: center;
       font-size: 12px;
     }
@@ -231,7 +231,6 @@
       white-space: nowrap;
     }
 
-    /* 頂部固定列：第1列(週期膠囊)、第2列(日期)、第3列(星期) */
     thead tr:nth-child(1) th {
       position: sticky;
       top: 0;
@@ -258,7 +257,6 @@
       height: 24px;
     }
 
-    /* 左側固定欄位 */
     .col-name {
       position: sticky;
       left: 0;
@@ -279,20 +277,13 @@
       font-size: 11px;
     }
 
-    /* 左上角凍結焦點 */
     thead th.col-name, thead th.col-group {
       z-index: 35 !important;
       background-color: #cbd5e1 !important;
     }
 
-    .weekend {
-      background-color: var(--weekend-bg) !important;
-      color: var(--weekend-text);
-    }
-    .national-holiday {
-      background-color: var(--holiday-bg) !important;
-      color: var(--holiday-text) !important;
-    }
+    .weekend { background-color: var(--weekend-bg) !important; color: var(--weekend-text); }
+    .national-holiday { background-color: var(--holiday-bg) !important; color: var(--holiday-text) !important; }
     .holiday-tag {
       display: block;
       font-size: 9px;
@@ -301,17 +292,13 @@
       line-height: 1;
       margin-top: 1px;
     }
-    .week-divider {
-      border-right: 2px solid #64748b !important;
-    }
-
+    .week-divider { border-right: 2px solid #64748b !important; }
     .day-exceeded {
       background-color: var(--danger-bg) !important;
       color: var(--danger-text) !important;
       font-weight: bold;
     }
 
-    /* 🟥 變形工時週期：紅色膠囊與框線 */
     .th-cycle-red {
       border: 2px solid #dc2626 !important;
       border-bottom: 3px solid #dc2626 !important;
@@ -322,11 +309,8 @@
       border-radius: 4px 4px 0 0;
       box-shadow: inset 0 0 0 1px #fee2e2;
     }
-    .cycle-start-red {
-      border-left: 3px solid #dc2626 !important;
-    }
+    .cycle-start-red { border-left: 3px solid #dc2626 !important; }
 
-    /* 🟦 變形工時週期：淺藍色膠囊與框線 */
     .th-cycle-blue {
       border: 2px solid #0284c7 !important;
       border-bottom: 3px solid #0284c7 !important;
@@ -337,24 +321,12 @@
       border-radius: 4px 4px 0 0;
       box-shadow: inset 0 0 0 1px #bae6fd;
     }
-    .cycle-start-blue {
-      border-left: 3px solid #0284c7 !important;
-    }
+    .cycle-start-blue { border-left: 3px solid #0284c7 !important; }
+    .cycle-divider-boundary { border-right: 4px solid #1e293b !important; }
 
-    /* 週期交界處的明顯深色隔線 */
-    .cycle-divider-boundary {
-      border-right: 4px solid #1e293b !important;
-    }
+    .duty-cell-primary { background-color: var(--duty-primary-bg) !important; }
+    .duty-cell-secondary { background-color: var(--duty-secondary-bg) !important; }
 
-    /* 值班專屬格子底色樣式 */
-    .duty-cell-primary {
-      background-color: var(--duty-primary-bg) !important;
-    }
-    .duty-cell-secondary {
-      background-color: var(--duty-secondary-bg) !important;
-    }
-
-    /* 休假分頁樣式 */
     .leave-cell {
       cursor: pointer;
       user-select: none;
@@ -370,10 +342,8 @@
     .leave-off-guo { background-color: var(--leave-guo-bg) !important; color: var(--leave-guo-text) !important; font-weight: bold; }
     .leave-off-te { background-color: var(--leave-te-bg) !important; color: var(--leave-te-text) !important; font-weight: bold; }
     .leave-off-general { background-color: #fee2e2 !important; color: #b91c1c !important; font-weight: bold; }
-
     .leave-cell.day-exceeded { background-color: #f87171 !important; color: #ffffff !important; }
 
-    /* 排班分頁樣式 */
     .cell-box {
       display: flex;
       flex-direction: column;
@@ -407,7 +377,6 @@
     }
     .shift-select:focus { outline: 2px solid var(--primary-light); background: #fff; }
     
-    /* 下拉選單各假別樣式 */
     .shift-OFF, .shift-OFF-休 { background-color: #fee2e2 !important; color: #b91c1c !important; font-weight: bold; }
     .shift-OFF-例 { background-color: #f3e8ff !important; color: #7e22ce !important; font-weight: bold; }
     .shift-OFF-國 { background-color: #ffedd5 !important; color: #c2410c !important; font-weight: bold; }
@@ -419,7 +388,6 @@
     .shift-8H17C08 { color: #047857; font-weight: 600; }
     .shift-8H5on8 { color: #4338ca; font-weight: 600; }
 
-    /* 統計欄位樣式 */
     .stat-col { background-color: #f8fafc; font-weight: bold; min-width: 55px; }
     .stat-off { color: #dc2626; }
     .stat-cycle-deficit, .stat-cycle-hours {
@@ -432,97 +400,99 @@
       white-space: normal;
       line-height: 1.3;
     }
-    .stat-cycle-ok {
-      color: #15803d !important;
-      font-weight: bold;
-    }
+    .stat-cycle-ok { color: #15803d !important; font-weight: bold; }
     .total-row { background-color: #f1f5f9; font-weight: bold; }
 
-    /* 電腦版螢幕專用優化 */
+    /* 武功秘笈 Modal 彈窗樣式 */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(15, 23, 42, 0.6);
+      z-index: 999;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: white;
+      width: 90%;
+      max-width: 780px;
+      border-radius: 12px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      max-height: 90vh;
+    }
+    .modal-header {
+      background: #d97706;
+      color: white;
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-header h2 { margin: 0; font-size: 1.25rem; }
+    .modal-close {
+      background: transparent;
+      font-size: 20px;
+      font-weight: bold;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .modal-body {
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+    }
+    .modal-body textarea {
+      width: 100%;
+      height: 380px;
+      padding: 12px;
+      font-size: 13.5px;
+      line-height: 1.6;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      resize: vertical;
+      font-family: inherit;
+    }
+    .modal-footer {
+      background: #f8fafc;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      border-top: 1px solid #e2e8f0;
+    }
+
     @media (min-width: 1024px) {
-      body {
-        padding: 20px 24px;
-      }
-      .header-panel {
-        padding: 16px 24px;
-      }
-      .title-area h1 {
-        font-size: 1.6rem;
-      }
-      .rule-badge {
-        font-size: 12px;
-        padding: 4px 10px;
-      }
-      .cycle-info-bar {
-        font-size: 14px;
-        padding: 10px 20px;
-      }
-      select, button, input {
-        padding: 8px 12px;
-        font-size: 14px;
-      }
-      .tab-btn {
-        padding: 12px 26px;
-        font-size: 15px;
-      }
-      table {
-        min-width: 2650px;
-        font-size: 14px;
-      }
-      th, td {
-        padding: 6px 3px;
-      }
-      thead tr:nth-child(1) th {
-        height: 34px;
-        font-size: 13px;
-      }
-      thead tr:nth-child(2) th {
-        height: 38px;
-        font-size: 14px;
-      }
-      thead tr:nth-child(3) th {
-        height: 28px;
-        font-size: 13px;
-      }
-      .col-name {
-        width: 105px !important;
-        min-width: 105px !important;
-        font-size: 14px;
-      }
-      .col-name input {
-        font-size: 14px !important;
-        padding: 4px 6px !important;
-      }
-      .col-group {
-        left: 105px !important;
-        width: 120px !important;
-        min-width: 120px !important;
-        font-size: 13px !important;
-      }
-      .pos-label {
-        font-size: 11px;
-        padding: 2px 4px;
-      }
-      .shift-select {
-        font-size: 13px;
-        padding: 3px 2px;
-        min-width: 82px;
-      }
-      .stat-col {
-        min-width: 70px;
-        font-size: 14px;
-      }
-      .stat-cycle-deficit, .stat-cycle-hours {
-        min-width: 135px;
-        font-size: 12px;
-      }
-      .holiday-tag {
-        font-size: 10px;
-      }
-      .leave-cell {
-        height: 42px;
-        font-size: 14px;
-      }
+      body { padding: 20px 24px; }
+      .header-panel { padding: 16px 24px; }
+      .title-area h1 { font-size: 1.6rem; }
+      .rule-badge { font-size: 12px; padding: 4px 10px; }
+      .cycle-info-bar { font-size: 14px; padding: 10px 20px; }
+      select, button, input { padding: 8px 12px; font-size: 14px; }
+      .tab-btn { padding: 12px 26px; font-size: 15px; }
+      table { min-width: 2650px; font-size: 14px; }
+      th, td { padding: 6px 3px; }
+      thead tr:nth-child(1) th { height: 34px; font-size: 13px; }
+      thead tr:nth-child(2) th { height: 38px; font-size: 14px; }
+      thead tr:nth-child(3) th { height: 28px; font-size: 13px; }
+      .col-name { width: 105px !important; min-width: 105px !important; font-size: 14px; }
+      .col-name input { font-size: 14px !important; padding: 4px 6px !important; }
+      .col-group { left: 105px !important; width: 120px !important; min-width: 120px !important; font-size: 13px !important; }
+      .pos-label { font-size: 11px; padding: 2px 4px; }
+      .shift-select { font-size: 13px; padding: 3px 2px; min-width: 82px; }
+      .stat-col { min-width: 70px; font-size: 14px; }
+      .stat-cycle-deficit, .stat-cycle-hours { min-width: 135px; font-size: 12px; }
+      .holiday-tag { font-size: 10px; }
+      .leave-cell { height: 42px; font-size: 14px; }
     }
   </style>
 </head>
@@ -551,7 +521,7 @@
       <button class="btn-save" onclick="manualSaveData()">💾 儲存修改</button>
       <button class="btn-auto" onclick="autoGenerateYearRoster()">⚡ 一鍵自動帶入全年輪值</button>
       <button class="btn-export" onclick="exportToCSV()">匯出 Excel (CSV)</button>
-      <button class="btn-clear" onclick="clearMonthData()">清空當月</button>
+      <button class="btn-secret" onclick="openRulesModal()">📜 武功秘笈</button>
     </div>
   </div>
 
@@ -564,7 +534,7 @@
       <button class="tab-btn" id="tabLeaveBtn" onclick="switchTab('leave')">🏖️ 畫休假登記表</button>
     </div>
 
-    <!-- 🏖️ 畫休假專用假別按鈕列（含特休） -->
+    <!-- 🏖️ 畫休假專用假別按鈕列 -->
     <div class="leave-brush-toolbar" id="leaveBrushToolbar" style="display: none;">
       <span class="brush-label">畫休模式：</span>
       <button class="brush-btn brush-lei active-brush" id="brushBtnLei" onclick="setLeaveBrush('OFF(例)')">🟣 例假</button>
@@ -621,6 +591,24 @@
     </table>
   </div>
 
+  <!-- 📜 武功秘笈 Modal 視窗 -->
+  <div class="modal-overlay" id="rulesModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>📜 科內排班武功秘笈（規則筆記）</h2>
+        <button class="modal-close" onclick="closeRulesModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <span style="font-size:12px; color:#64748b;">在此記錄科內的排班規範、變形工時原則或重要輪值備註（支援即時雲端儲存）：</span>
+        <textarea id="rulesContent" placeholder="請在此輸入或新增科內排班武功秘笈規則..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button onclick="closeRulesModal()" style="background:#64748b;">關閉</button>
+        <button onclick="saveRulesData()" style="background:#059669; font-weight:bold;">💾 儲存秘笈</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // -------------------------------------------------------------
     // 🔥 Firebase 設定（專案 anwen-8b2fd）
@@ -670,7 +658,7 @@
     };
 
     // -------------------------------------------------------------
-    // 🟥/🟦 變形工時 4 週週期設定（新增各週期應上班時數 reqHours）
+    // 🟥/🟦 變形工時 4 週週期設定（含應達工時）
     // -------------------------------------------------------------
     const WORK_CYCLES = [
       { id: 10, name: "週期10", color: "red", start: "2026-08-31", end: "2026-09-27", reqLei: 4, reqXiu: 4, reqGuo: 1, reqHours: 152, quota: "4例、4休、1國 (需 152hr)" },
@@ -898,6 +886,7 @@
       renderCalendarHeader();
       renderCycleInfo();
       listenToFirebaseData();
+      listenToRulesData();
     }
 
     function renderCycleInfo() {
@@ -1035,7 +1024,6 @@
         lFooter.appendChild(thLCount);
       }
 
-      // 每個週期佔 2 欄（假別差額 + 時數檢核）
       const statSpanCountRoster = 2 + (activeCycles.length * 2);
       const statSpanCountLeave = 1 + (activeCycles.length * 2);
 
@@ -1057,13 +1045,11 @@
       lDates.innerHTML += `<th class="stat-col stat-off">休假總計</th>`;
 
       activeCycles.forEach(c => {
-        // 假別差額
         const thDeficitR = document.createElement("th");
         thDeficitR.className = "stat-col stat-cycle-deficit";
         thDeficitR.innerHTML = `【${c.name}差額】<br><span style="font-size:10px;font-weight:normal;color:#64748b;">(需${c.reqLei}例${c.reqXiu}休${c.reqGuo}國)</span>`;
         rDates.appendChild(thDeficitR);
 
-        // 時數檢核
         const thHoursR = document.createElement("th");
         thHoursR.className = "stat-col stat-cycle-hours";
         thHoursR.innerHTML = `【${c.name}時數】<br><span style="font-size:10px;font-weight:normal;color:#64748b;">(需${c.reqHours}hr)</span>`;
@@ -1738,7 +1724,7 @@
               workCount++;
               activeCycles.forEach(c => {
                 if (dateKey >= c.start && dateKey <= c.end) {
-                  cycleWorkHours[c.id] += 8; // 每班次 +8 小時
+                  cycleWorkHours[c.id] += 8;
                 }
               });
             }
@@ -1755,7 +1741,6 @@
         if (lElem) lElem.textContent = offCount;
 
         activeCycles.forEach(c => {
-          // 1. 假別差額檢核
           const cCounts = cycleOffCounts[c.id];
           const deficitResult = calculateCycleDeficitDetails(cCounts, c.reqLei, c.reqXiu, c.reqGuo);
 
@@ -1775,7 +1760,6 @@
           applyDeficitStyle(rDefElem);
           applyDeficitStyle(lDefElem);
 
-          // 2. 工時統計與檢核
           const actualHours = cycleWorkHours[c.id] || 0;
           const reqHours = c.reqHours || 0;
           const rHourElem = document.getElementById(`cycle_hours_${c.id}_${m.id}`);
@@ -1853,14 +1837,48 @@
       }
     }
 
-    function clearMonthData() {
-      if (confirm("確定要清空當月的排班與休假資料嗎？")) {
-        const year = parseInt(yearSelect.value);
-        const month = parseInt(monthSelect.value);
-        localStorage.removeItem(`team_roster_${year}_${month}`);
-        db.ref(`medical_roster/${year}_${month}`).remove();
-        renderAll();
+    // -------------------------------------------------------------
+    // 📜 武功秘笈（規則筆記管理 + 密碼 0811 保護）
+    // -------------------------------------------------------------
+    const SECRET_PASSWORD = "0811";
+
+    function openRulesModal() {
+      const inputPwd = prompt("🔑 請輸入武功秘笈通關密碼：");
+      if (inputPwd === null) return;
+      if (inputPwd !== SECRET_PASSWORD) {
+        alert("❌ 密碼錯誤！無法查看與編輯武功秘笈。");
+        return;
       }
+      
+      const localRules = localStorage.getItem("team_rules_cheatsheet") || "";
+      document.getElementById("rulesContent").value = localRules;
+      document.getElementById("rulesModal").style.display = "flex";
+    }
+
+    function closeRulesModal() {
+      document.getElementById("rulesModal").style.display = "none";
+    }
+
+    function saveRulesData() {
+      const content = document.getElementById("rulesContent").value;
+      localStorage.setItem("team_rules_cheatsheet", content);
+      db.ref("team_rules/cheatsheet").set(content).then(() => {
+        alert("✅ 武功秘笈規則已成功儲存並同步至 Firebase 雲端！");
+        closeRulesModal();
+      }).catch((err) => {
+        alert("⚠️ 儲存失敗，請檢查網路連線：" + err.message);
+      });
+    }
+
+    function listenToRulesData() {
+      db.ref("team_rules/cheatsheet").on('value', (snapshot) => {
+        const val = snapshot.val() || "";
+        localStorage.setItem("team_rules_cheatsheet", val);
+        const rulesTextarea = document.getElementById("rulesContent");
+        if (rulesTextarea && document.getElementById("rulesModal").style.display !== "flex") {
+          rulesTextarea.value = val;
+        }
+      });
     }
 
     function exportToCSV() {
