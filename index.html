@@ -139,6 +139,7 @@
     }
     button:hover { opacity: 0.9; }
     .btn-save { background-color: #0284c7; font-weight: bold; }
+    .btn-reset-names { background-color: #0891b2; font-weight: bold; }
     .btn-auto { background-color: #4338ca; font-weight: 600; }
     .btn-export { background-color: #059669; }
     .btn-secret { background-color: #d97706; font-weight: bold; }
@@ -262,13 +263,13 @@
       left: 0;
       background-color: #f8fafc;
       z-index: 10;
-      width: 85px;
-      min-width: 85px;
+      width: 95px;
+      min-width: 95px;
       font-weight: bold;
     }
     .col-group {
       position: sticky;
-      left: 85px;
+      left: 95px;
       background-color: #f8fafc;
       z-index: 10;
       width: 95px;
@@ -484,9 +485,9 @@
       thead tr:nth-child(1) th { height: 34px; font-size: 13px; }
       thead tr:nth-child(2) th { height: 38px; font-size: 14px; }
       thead tr:nth-child(3) th { height: 28px; font-size: 13px; }
-      .col-name { width: 105px !important; min-width: 105px !important; font-size: 14px; }
-      .col-name input { font-size: 14px !important; padding: 4px 6px !important; }
-      .col-group { left: 105px !important; width: 120px !important; min-width: 120px !important; font-size: 13px !important; }
+      .col-name { width: 110px !important; min-width: 110px !important; font-size: 14px; }
+      .col-name input { font-size: 14px !important; padding: 4px 6px !important; width: 95px !important; }
+      .col-group { left: 110px !important; width: 120px !important; min-width: 120px !important; font-size: 13px !important; }
       .pos-label { font-size: 11px; padding: 2px 4px; }
       .shift-select { font-size: 13px; padding: 3px 2px; min-width: 82px; }
       .stat-col { min-width: 70px; font-size: 14px; }
@@ -518,6 +519,7 @@
       <label>月份：<select id="monthSelect"></select></label>
       <button class="btn-nav" onclick="changeMonth(1)">下個月 ▶</button>
       <button onclick="renderAll()">重新整理</button>
+      <button class="btn-reset-names" onclick="forceResetAllNames()">🔄 重設預設全名</button>
       <button class="btn-save" onclick="manualSaveData()">💾 儲存修改</button>
       <button class="btn-auto" onclick="autoGenerateYearRoster()">⚡ 一鍵自動帶入全年輪值</button>
       <button class="btn-export" onclick="exportToCSV()">匯出 Excel (CSV)</button>
@@ -729,7 +731,7 @@
     const BASE_CT_MONTH = 8;
     const BASE_CT_DUTY_DATE = new Date(2026, 7, 3);
 
-    const MRI_MEMBERS = ["碰", "任", "揮荃", "佳", "忠", "阿文"];
+    const MRI_MEMBERS = ["彭及禎", "張任翔", "林暉筌", "賴佳琪", "詹忠憲", "李軒緯"];
     const MRI_WEEK_ROLES = [
       { pos: "1.5S", shift: "8C16C08" },
       { pos: "1.5S小夜", shift: "15C23C8" },
@@ -748,17 +750,31 @@
       { primary: "sup_zhida", secondary: "ct_yutai" }
     ];
 
+    // 舊姓名轉新全名比對表（防止舊快取覆蓋）
+    const OLD_TO_NEW_NAMES = {
+      "碰": "彭及禎",
+      "任": "張任翔",
+      "揮荃": "林暉筌",
+      "佳": "賴佳琪",
+      "忠": "詹忠憲",
+      "阿文": "李軒緯",
+      "宇泰": "劉宇泰",
+      "宇廷": "羅宇廷",
+      "哲維": "許哲維",
+      "志達": "魏志達"
+    };
+
     const teamMembers = [
-      { id: "mri_0", name: "碰", group: "MRI週輪值", type: "MRI", mriIdx: 0 },
-      { id: "mri_1", name: "任", group: "MRI週輪值", type: "MRI", mriIdx: 1 },
-      { id: "mri_2", name: "揮荃", group: "MRI週輪值", type: "MRI", mriIdx: 2 },
-      { id: "mri_3", name: "佳", group: "MRI週輪值", type: "MRI", mriIdx: 3 },
-      { id: "mri_4", name: "忠", group: "MRI週輪值", type: "MRI", mriIdx: 4 },
-      { id: "mri_5", name: "阿文", group: "MRI週輪值", type: "MRI", mriIdx: 5 },
-      { id: "ct_yutai", name: "宇泰", group: "CT月輪值", type: "CT", basePosIdx: 2 },
-      { id: "ct_yuting", name: "宇廷", group: "CT月輪值", type: "CT", basePosIdx: 0 },
-      { id: "ct_zhewei", name: "哲維", group: "CT月輪值", type: "CT", basePosIdx: 1 },
-      { id: "sup_zhida", name: "志達", group: "支援一(固定)", type: "SUP1", fixedPos: "支援一", defaultShift: "8H17C08" }
+      { id: "mri_0", name: "彭及禎", group: "MRI週輪值", type: "MRI", mriIdx: 0 },
+      { id: "mri_1", name: "張任翔", group: "MRI週輪值", type: "MRI", mriIdx: 1 },
+      { id: "mri_2", name: "林暉筌", group: "MRI週輪值", type: "MRI", mriIdx: 2 },
+      { id: "mri_3", name: "賴佳琪", group: "MRI週輪值", type: "MRI", mriIdx: 3 },
+      { id: "mri_4", name: "詹忠憲", group: "MRI週輪值", type: "MRI", mriIdx: 4 },
+      { id: "mri_5", name: "李軒緯", group: "MRI週輪值", type: "MRI", mriIdx: 5 },
+      { id: "ct_yutai", name: "劉宇泰", group: "CT月輪值", type: "CT", basePosIdx: 2 },
+      { id: "ct_yuting", name: "羅宇廷", group: "CT月輪值", type: "CT", basePosIdx: 0 },
+      { id: "ct_zhewei", name: "許哲維", group: "CT月輪值", type: "CT", basePosIdx: 1 },
+      { id: "sup_zhida", name: "魏志達", group: "支援一(固定)", type: "SUP1", fixedPos: "支援一", defaultShift: "8H17C08" }
     ];
 
     const shiftTypes = [
@@ -1155,6 +1171,14 @@
       });
     }
 
+    function getCleanMemberName(m, savedData) {
+      let currentVal = savedData[`name_${m.id}`];
+      if (!currentVal || OLD_TO_NEW_NAMES[currentVal.trim()]) {
+        return OLD_TO_NEW_NAMES[currentVal ? currentVal.trim() : ''] || m.name;
+      }
+      return currentVal;
+    }
+
     function renderRosterBody() {
       const year = parseInt(yearSelect.value);
       const month = parseInt(monthSelect.value);
@@ -1172,8 +1196,8 @@
         const tdName = document.createElement("td");
         tdName.className = "col-name";
         const nameInput = document.createElement("input");
-        nameInput.value = savedData[`name_${m.id}`] || m.name;
-        nameInput.style.width = "88px";
+        nameInput.value = getCleanMemberName(m, savedData);
+        nameInput.style.width = "95px";
         nameInput.onchange = () => { saveData(); renderLeaveBody(); };
         tdName.appendChild(nameInput);
         tr.appendChild(tdName);
@@ -1316,12 +1340,9 @@
         const tr = document.createElement("tr");
         tr.dataset.memberId = m.id;
 
-        const nameInp = document.querySelector(`tr[data-member-id="${m.id}"] .col-name input`);
-        const currentName = savedData[`name_${m.id}`] || (nameInp ? nameInp.value : m.name);
-
         const tdName = document.createElement("td");
         tdName.className = "col-name";
-        tdName.textContent = currentName;
+        tdName.textContent = getCleanMemberName(m, savedData);
         tr.appendChild(tdName);
 
         const tdGroup = document.createElement("td");
@@ -1576,7 +1597,7 @@
 
         const curSaved = JSON.parse(localStorage.getItem(`team_roster_${targetYear}_${m}`) || "{}");
         teamMembers.forEach(tm => {
-          monthData[`name_${tm.id}`] = curSaved[`name_${tm.id}`] || tm.name;
+          monthData[`name_${tm.id}`] = getCleanMemberName(tm, curSaved);
         });
 
         teamMembers.forEach(tm => {
@@ -1659,6 +1680,21 @@
 
       renderAll();
       alert(`🎉 恭喜！已成功自動帶入 ${targetYear} 年【全年 1 ~ 12 月】的完整輪值排班，並已全數同步儲存至 Firebase 雲端！`);
+    }
+
+    // 🔄 一鍵重設為預設全名專用函數
+    function forceResetAllNames() {
+      if (!confirm("確定要將本月的 10 位成員姓名強制重設為預設全名（彭及禎、張任翔、林暉筌、賴佳琪、詹忠憲、李軒緯、劉宇泰、羅宇廷、許哲維、魏志達）並同步至雲端嗎？")) {
+        return;
+      }
+      teamMembers.forEach(m => {
+        const inp = document.querySelector(`tr[data-member-id="${m.id}"] .col-name input`);
+        if (inp) inp.value = m.name;
+      });
+      saveData();
+      renderLeaveBody();
+      updateAllStats();
+      alert("✅ 已成功重設 10 位同仁為最新全名，並已同步更新至 Firebase 雲端！");
     }
 
     // 💾 手動儲存按鈕專用函數
@@ -1860,9 +1896,9 @@
 `【醫學影像 10 人團隊排班武功秘笈】
 
 一、 團隊編制與組別分配
-1. MRI 組（6人週輪值）：碰、任、揮荃、佳、忠、阿文
-2. CT 組（3人月輪值）：宇泰、宇廷、哲維
-3. 支援組（1人固定）：志達（固定支援一，配合 CT 一/二線值班輪替）
+1. MRI 組（6人週輪值）：彭及禎、張任翔、林暉筌、賴佳琪、詹忠憲、李軒緯
+2. CT 組（3人月輪值）：劉宇泰、羅宇廷、許哲維
+3. 支援組（1人固定）：魏志達（固定支援一，配合 CT 一/二線值班輪替）
 
 二、 崗位輪值機制
 1. MRI 週輪值崗位順序（以 2026/05/11 基準週循環）：
@@ -1875,14 +1911,14 @@
 2. CT 月輪值崗位順序（以 2026/08 基準月循環）：
    - RCT ➜ Angio ➜ 256CT
 3. CT 週末/夜間值班 4 週輪替（以 2026/08/03 基準週循環）：
-   - 第1週：宇廷(一線) / 哲維(二線)
-   - 第2週：宇泰(一線) / 志達(二線)
-   - 第3週：哲維(一線) / 宇廷(二線)
-   - 第4週：志達(一線) / 宇泰(二線)
+   - 第1週：羅宇廷(一線) / 許哲維(二線)
+   - 第2週：劉宇泰(一線) / 魏志達(二線)
+   - 第3週：許哲維(一線) / 羅宇廷(二線)
+   - 第4週：魏志達(一線) / 劉宇泰(二線)
 
 三、 代班與畫休連動規則
 1. MRI 平日請假：當值「支援二」的人員自動代班該請假人員之崗位與班別（標示「代:崗位」）。
-2. CT 平日請假：由「志達 (支援一)」自動代班該請假人員之月崗位（標示「代:崗位」）。
+2. CT 平日請假：由「魏志達 (支援一)」自動代班該請假人員之月崗位（標示「代:崗位」）。
 3. 平日（週一至週五，扣除國定假日）全科 OFF 人數上限為 2 人，超過 2 人時表格顯示紅底警告。
 4. 當排班遇到 C8C8C24(休) 時，系統自動排上 (休) 的假別，視同休假，因此上班總時數不 +8 小時。
 
@@ -1919,12 +1955,12 @@
     function saveRulesData() {
       const content = document.getElementById("rulesContent").value;
       localStorage.setItem("team_rules_cheatsheet", content);
-      db.ref("team_rules/cheatsheet").set(content).then(() => {
+      db.ref("team_rules/cheatsheet").then ? db.ref("team_rules/cheatsheet").set(content).then(() => {
         alert("✅ 武功秘笈規則已成功儲存並同步至 Firebase 雲端！");
         closeRulesModal();
       }).catch((err) => {
         alert("⚠️ 儲存失敗，請檢查網路連線：" + err.message);
-      });
+      }) : (db.ref("team_rules/cheatsheet").set(content), alert("✅ 武功秘笈規則已成功儲存並同步至 Firebase 雲端！"), closeRulesModal());
     }
 
     function listenToRulesData() {
