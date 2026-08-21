@@ -2347,13 +2347,12 @@
       });
     }
 
-    // 📊 升級版 Excel 匯出 (僅純淨保留班別代碼，移除重複的站別標籤)
+    // 📊 升級版 Excel 匯出 (僅匯出姓名、組別與每日班別，不含後方統計)
     function exportToExcel() {
       const year = parseInt(yearSelect.value);
       const month = parseInt(monthSelect.value);
       const daysCount = getDaysInMonth(year, month);
       const mStr = month < 10 ? `0${month}` : `${month}`;
-      const activeCycles = getActiveCyclesForMonth(year, month);
 
       let excelHtml = `
         <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
@@ -2367,9 +2366,6 @@
             .th-cycle-blue { background-color: #e0f2fe; color: #0369a1; font-weight: bold; border: 1pt solid #38bdf8; }
             .weekend { background-color: #fee2e2; color: #991b1b; }
             .national-holiday { background-color: #ffe4e6; color: #e11d48; font-weight: bold; }
-            .stat-header { background-color: #f1f5f9; font-weight: bold; }
-            .stat-val { font-weight: bold; }
-            .stat-off { color: #dc2626; font-weight: bold; }
           </style>
         </head>
         <body>
@@ -2377,7 +2373,7 @@
       `;
 
       // 列 1: 週期大表頭
-      excelHtml += `<tr><th colspan="2" class="th-header">${year}年${month}月 排班總表</th>`;
+      excelHtml += `<tr><th colspan="2" class="th-header">${year}年${month}月 排班表</th>`;
       let curCycle = null;
       let spanCount = 0;
       for (let day = 1; day <= daysCount; day++) {
@@ -2394,7 +2390,7 @@
           excelHtml += `<th colspan="${spanCount}" class="${curCycle ? (curCycle.color === 'red' ? 'th-cycle-red' : 'th-cycle-blue') : 'th-header'}">${curCycle ? curCycle.name + ' (' + curCycle.quota.split(' ')[0] + ')' : '-'}</th>`;
         }
       }
-      excelHtml += `<th colspan="${2 + activeCycles.length * 2}" class="stat-header">出勤與週期檢核統計</th></tr>`;
+      excelHtml += `</tr>`;
 
       // 列 2: 日期列
       excelHtml += `<tr><th class="th-header">成員姓名</th><th class="th-header">組別/主崗位</th>`;
@@ -2409,10 +2405,6 @@
         if (holidayName) cls = "national-holiday";
         excelHtml += `<th class="${cls}">${day}${holidayName ? ' ('+holidayName+')' : ''}</th>`;
       }
-      excelHtml += `<th class="stat-header">出勤天</th><th class="stat-header stat-off">OFF天</th>`;
-      activeCycles.forEach(c => {
-        excelHtml += `<th class="stat-header">【${c.name}差額】</th><th class="stat-header">【${c.name}時數】</th>`;
-      });
       excelHtml += `</tr>`;
 
       // 列 3: 星期列
@@ -2423,10 +2415,6 @@
         const isWeekend = (weekDay === 0 || weekDay === 6);
         excelHtml += `<th class="${isWeekend ? 'weekend' : 'th-header'}">${weekDayNames[weekDay]}</th>`;
       }
-      excelHtml += `<th class="stat-header">天</th><th class="stat-header stat-off">天</th>`;
-      activeCycles.forEach(() => {
-        excelHtml += `<th class="stat-header">例/休/國</th><th class="stat-header">工時(現/應)</th>`;
-      });
       excelHtml += `</tr>`;
 
       // 資料列: 人員排班明細 (僅純淨輸出班別代碼)
@@ -2447,17 +2435,6 @@
           const text = shift || '-';
           excelHtml += `<td style="${cellStyle}">${text}</td>`;
         });
-
-        const workDays = r.querySelector("[id^='workdays_']").textContent;
-        const offDays = r.querySelector("[id^='offdays_']").textContent;
-        excelHtml += `<td class="stat-val">${workDays}</td><td class="stat-off">${offDays}</td>`;
-
-        activeCycles.forEach(c => {
-          const mId = r.dataset.memberId;
-          const defElem = document.getElementById(`cycle_deficit_${c.id}_${mId}`);
-          const hourElem = document.getElementById(`cycle_hours_${c.id}_${mId}`);
-          excelHtml += `<td>${defElem ? defElem.textContent : '-'}</td><td>${hourElem ? hourElem.textContent : '-'}</td>`;
-        });
         excelHtml += `</tr>`;
       });
 
@@ -2466,7 +2443,7 @@
       const blob = new Blob([excelHtml], { type: "application/vnd.ms-excel;charset=utf-8;" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.setAttribute("download", `${year}年${month}月_醫學影像排班與休假表.xls`);
+      link.setAttribute("download", `${year}年${month}月_醫學影像排班表.xls`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
