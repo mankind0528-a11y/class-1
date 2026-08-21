@@ -220,7 +220,7 @@
       border-collapse: separate;
       border-spacing: 0;
       width: 100%;
-      min-width: 1950px;
+      min-width: 2150px;
       text-align: center;
       font-size: 12px;
     }
@@ -422,7 +422,7 @@
     /* 統計欄位樣式 */
     .stat-col { background-color: #f8fafc; font-weight: bold; min-width: 55px; }
     .stat-off { color: #dc2626; }
-    .stat-cycle-deficit {
+    .stat-cycle-deficit, .stat-cycle-hours {
       min-width: 115px;
       font-size: 11px;
       font-weight: 600;
@@ -466,7 +466,7 @@
         font-size: 15px;
       }
       table {
-        min-width: 2450px;
+        min-width: 2650px;
         font-size: 14px;
       }
       th, td {
@@ -512,7 +512,7 @@
         min-width: 70px;
         font-size: 14px;
       }
-      .stat-cycle-deficit {
+      .stat-cycle-deficit, .stat-cycle-hours {
         min-width: 135px;
         font-size: 12px;
       }
@@ -670,13 +670,13 @@
     };
 
     // -------------------------------------------------------------
-    // 🟥/🟦 變形工時 4 週週期設定（4例、4休、X國）
+    // 🟥/🟦 變形工時 4 週週期設定（新增各週期應上班時數 reqHours）
     // -------------------------------------------------------------
     const WORK_CYCLES = [
-      { id: 10, name: "週期10", color: "red", start: "2026-08-31", end: "2026-09-27", reqLei: 4, reqXiu: 4, reqGuo: 1, quota: "4例、4休、1國 (共 9 天)" },
-      { id: 11, name: "週期11", color: "blue", start: "2026-09-28", end: "2026-10-25", reqLei: 4, reqXiu: 4, reqGuo: 2, quota: "4例、4休、2國 (共 10 天)" },
-      { id: 12, name: "週期12", color: "red", start: "2026-10-26", end: "2026-11-22", reqLei: 4, reqXiu: 4, reqGuo: 1, quota: "4例、4休、1國 (共 9 天)" },
-      { id: 13, name: "週期13", color: "blue", start: "2026-11-23", end: "2026-12-20", reqLei: 4, reqXiu: 4, reqGuo: 0, quota: "4例、4休、0國 (共 8 天)" }
+      { id: 10, name: "週期10", color: "red", start: "2026-08-31", end: "2026-09-27", reqLei: 4, reqXiu: 4, reqGuo: 1, reqHours: 152, quota: "4例、4休、1國 (需 152hr)" },
+      { id: 11, name: "週期11", color: "blue", start: "2026-09-28", end: "2026-10-25", reqLei: 4, reqXiu: 4, reqGuo: 2, reqHours: 144, quota: "4例、4休、2國 (需 144hr)" },
+      { id: 12, name: "週期12", color: "red", start: "2026-10-26", end: "2026-11-22", reqLei: 4, reqXiu: 4, reqGuo: 1, reqHours: 152, quota: "4例、4休、1國 (需 152hr)" },
+      { id: 13, name: "週期13", color: "blue", start: "2026-11-23", end: "2026-12-20", reqLei: 4, reqXiu: 4, reqGuo: 0, reqHours: 160, quota: "4例、4休、0國 (需 160hr)" }
     ];
 
     function getCycleInfoForDate(dateStr) {
@@ -1035,17 +1035,19 @@
         lFooter.appendChild(thLCount);
       }
 
-      const statSpanCount = 2 + activeCycles.length;
+      // 每個週期佔 2 欄（假別差額 + 時數檢核）
+      const statSpanCountRoster = 2 + (activeCycles.length * 2);
+      const statSpanCountLeave = 1 + (activeCycles.length * 2);
 
       const thRCycleStat = document.createElement("th");
-      thRCycleStat.colSpan = statSpanCount;
+      thRCycleStat.colSpan = statSpanCountRoster;
       thRCycleStat.className = "stat-col";
       thRCycleStat.style.cssText = "font-size:11px; color:#475569; background:#f8fafc;";
       thRCycleStat.textContent = "統計與週期檢核";
       rCycles.appendChild(thRCycleStat);
 
       const thLCycleStat = document.createElement("th");
-      thLCycleStat.colSpan = 1 + activeCycles.length;
+      thLCycleStat.colSpan = statSpanCountLeave;
       thLCycleStat.className = "stat-col";
       thLCycleStat.style.cssText = "font-size:11px; color:#475569; background:#f8fafc;";
       thLCycleStat.textContent = "休假統計與週期檢核";
@@ -1055,15 +1057,27 @@
       lDates.innerHTML += `<th class="stat-col stat-off">休假總計</th>`;
 
       activeCycles.forEach(c => {
+        // 假別差額
         const thDeficitR = document.createElement("th");
         thDeficitR.className = "stat-col stat-cycle-deficit";
         thDeficitR.innerHTML = `【${c.name}差額】<br><span style="font-size:10px;font-weight:normal;color:#64748b;">(需${c.reqLei}例${c.reqXiu}休${c.reqGuo}國)</span>`;
         rDates.appendChild(thDeficitR);
 
+        // 時數檢核
+        const thHoursR = document.createElement("th");
+        thHoursR.className = "stat-col stat-cycle-hours";
+        thHoursR.innerHTML = `【${c.name}時數】<br><span style="font-size:10px;font-weight:normal;color:#64748b;">(需${c.reqHours}hr)</span>`;
+        rDates.appendChild(thHoursR);
+
         const thDeficitL = document.createElement("th");
         thDeficitL.className = "stat-col stat-cycle-deficit";
         thDeficitL.innerHTML = `【${c.name}差額】<br><span style="font-size:10px;font-weight:normal;color:#64748b;">(需${c.reqLei}例${c.reqXiu}休${c.reqGuo}國)</span>`;
         lDates.appendChild(thDeficitL);
+
+        const thHoursL = document.createElement("th");
+        thHoursL.className = "stat-col stat-cycle-hours";
+        thHoursL.innerHTML = `【${c.name}時數】<br><span style="font-size:10px;font-weight:normal;color:#64748b;">(需${c.reqHours}hr)</span>`;
+        lDates.appendChild(thHoursL);
       });
 
       rDays.innerHTML += `<th class="stat-col">天</th><th class="stat-col stat-off">天</th>`;
@@ -1071,12 +1085,15 @@
 
       activeCycles.forEach(() => {
         rDays.innerHTML += `<th class="stat-col stat-cycle-deficit">例 / 休 / 國</th>`;
+        rDays.innerHTML += `<th class="stat-col stat-cycle-hours">時數 (現有/應到)</th>`;
         lDays.innerHTML += `<th class="stat-col stat-cycle-deficit">例 / 休 / 國</th>`;
+        lDays.innerHTML += `<th class="stat-col stat-cycle-hours">時數 (現有/應到)</th>`;
       });
 
       lFooter.innerHTML += `<th class="stat-col stat-off" id="leaveMonthlyGrandTotal">0</th>`;
       activeCycles.forEach(() => {
         lFooter.innerHTML += `<th class="stat-col stat-cycle-deficit">-</th>`;
+        lFooter.innerHTML += `<th class="stat-col stat-cycle-hours">-</th>`;
       });
     }
 
@@ -1284,6 +1301,12 @@
           tdDeficit.className = "stat-col stat-cycle-deficit";
           tdDeficit.textContent = "-";
           tr.appendChild(tdDeficit);
+
+          const tdHours = document.createElement("td");
+          tdHours.id = `cycle_hours_${c.id}_${m.id}`;
+          tdHours.className = "stat-col stat-cycle-hours";
+          tdHours.textContent = "-";
+          tr.appendChild(tdHours);
         });
 
         rosterBody.appendChild(tr);
@@ -1368,6 +1391,12 @@
           tdDeficit.className = "stat-col stat-cycle-deficit";
           tdDeficit.textContent = "-";
           tr.appendChild(tdDeficit);
+
+          const tdHours = document.createElement("td");
+          tdHours.id = `leave_cycle_hours_${c.id}_${m.id}`;
+          tdHours.className = "stat-col stat-cycle-hours";
+          tdHours.textContent = "-";
+          tr.appendChild(tdHours);
         });
 
         leaveBody.appendChild(tr);
@@ -1681,8 +1710,10 @@
         let offCount = 0;
 
         const cycleOffCounts = {};
+        const cycleWorkHours = {};
         activeCycles.forEach(c => {
           cycleOffCounts[c.id] = { lei: 0, xiu: 0, guo: 0, te: 0, general: 0 };
+          cycleWorkHours[c.id] = 0;
         });
 
         for (let day = 1; day <= daysCount; day++) {
@@ -1705,6 +1736,11 @@
               });
             } else if (val !== "") {
               workCount++;
+              activeCycles.forEach(c => {
+                if (dateKey >= c.start && dateKey <= c.end) {
+                  cycleWorkHours[c.id] += 8; // 每班次 +8 小時
+                }
+              });
             }
           }
         }
@@ -1719,6 +1755,7 @@
         if (lElem) lElem.textContent = offCount;
 
         activeCycles.forEach(c => {
+          // 1. 假別差額檢核
           const cCounts = cycleOffCounts[c.id];
           const deficitResult = calculateCycleDeficitDetails(cCounts, c.reqLei, c.reqXiu, c.reqGuo);
 
@@ -1737,6 +1774,38 @@
 
           applyDeficitStyle(rDefElem);
           applyDeficitStyle(lDefElem);
+
+          // 2. 工時統計與檢核
+          const actualHours = cycleWorkHours[c.id] || 0;
+          const reqHours = c.reqHours || 0;
+          const rHourElem = document.getElementById(`cycle_hours_${c.id}_${m.id}`);
+          const lHourElem = document.getElementById(`leave_cycle_hours_${c.id}_${m.id}`);
+
+          let hourText = "";
+          let isHourOk = false;
+
+          if (actualHours >= reqHours) {
+            isHourOk = true;
+            const diffPlus = actualHours - reqHours;
+            hourText = diffPlus > 0 ? `🟢 ${actualHours}/${reqHours}hr (+${diffPlus})` : `🟢 ${actualHours}/${reqHours}hr`;
+          } else {
+            isHourOk = false;
+            const diffMinus = reqHours - actualHours;
+            hourText = `${actualHours}/${reqHours}hr (差${diffMinus}hr)`;
+          }
+
+          const applyHourStyle = (elem) => {
+            if (!elem) return;
+            elem.textContent = hourText;
+            if (isHourOk) {
+              elem.classList.add("stat-cycle-ok");
+            } else {
+              elem.classList.remove("stat-cycle-ok");
+            }
+          };
+
+          applyHourStyle(rHourElem);
+          applyHourStyle(lHourElem);
         });
       });
 
@@ -1805,7 +1874,10 @@
       let row1 = ["成員姓名", "組別/主崗位"];
       for (let d = 1; d <= daysCount; d++) row1.push(`${month}/${d}`);
       row1.push("出勤天數", "OFF天數");
-      activeCycles.forEach(c => row1.push(`【${c.name}差額】`));
+      activeCycles.forEach(c => {
+        row1.push(`【${c.name}差額】`);
+        row1.push(`【${c.name}時數】`);
+      });
       csvContent += row1.join(",") + "\r\n";
 
       let row2 = ["", ""];
@@ -1814,7 +1886,10 @@
         row2.push(weekDayNames[weekDay]);
       }
       row2.push("", "");
-      activeCycles.forEach(() => row2.push("例/休/國"));
+      activeCycles.forEach(() => {
+        row2.push("例/休/國");
+        row2.push("工時(現有/應到)");
+      });
       csvContent += row2.join(",") + "\r\n";
 
       const rows = document.querySelectorAll("#rosterBody tr");
@@ -1838,7 +1913,9 @@
         activeCycles.forEach(c => {
           const mId = r.dataset.memberId;
           const defElem = document.getElementById(`cycle_deficit_${c.id}_${mId}`);
+          const hourElem = document.getElementById(`cycle_hours_${c.id}_${mId}`);
           rowData.push(`"${defElem ? defElem.textContent : '-'}"`);
+          rowData.push(`"${hourElem ? hourElem.textContent : '-'}"`);
         });
 
         csvContent += rowData.join(",") + "\r\n";
