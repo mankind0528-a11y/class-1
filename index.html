@@ -142,7 +142,7 @@
     .btn-save { background-color: #0284c7; font-weight: bold; }
     .btn-reset-names { background-color: #0891b2; font-weight: bold; }
     .btn-auto { background-color: #4338ca; font-weight: 600; }
-    .btn-export { background-color: #059669; }
+    .btn-export { background-color: #059669; font-weight: bold; }
     .btn-secret { background-color: #d97706; font-weight: bold; }
     .btn-nav { background-color: #475569; padding: 5px 10px; }
 
@@ -457,7 +457,6 @@
       white-space: nowrap;
     }
     
-    /* 🧊 輪值表表頭垂直置頂 */
     .rotation-table thead th {
       position: sticky;
       top: 0;
@@ -465,7 +464,6 @@
       background-color: #f8fafc;
     }
 
-    /* 🧊 輪值表手機端欄位水平凍結 (週次 + 日期) */
     .rot-col-sticky-1 {
       position: sticky;
       left: 0;
@@ -628,7 +626,7 @@
       <button class="btn-reset-names" onclick="forceResetAllNames()">🔄 重設預設全名</button>
       <button class="btn-save" onclick="manualSaveData()">💾 儲存修改</button>
       <button class="btn-auto" onclick="autoGenerateYearRoster()">⚡ 一鍵自動帶入全年輪值</button>
-      <button class="btn-export" onclick="exportToCSV()">匯出 Excel (CSV)</button>
+      <button class="btn-export" onclick="exportToExcel()">📊 匯出 Excel 表格</button>
       <button class="btn-secret" onclick="openRulesModal()">📜 武功秘笈</button>
     </div>
   </div>
@@ -2349,68 +2347,126 @@
       });
     }
 
-    function exportToCSV() {
-      const year = yearSelect.value;
-      const month = monthSelect.value;
+    // 📊 升級版 Excel 匯出 (僅純淨保留班別代碼，移除重複的站別標籤)
+    function exportToExcel() {
+      const year = parseInt(yearSelect.value);
+      const month = parseInt(monthSelect.value);
       const daysCount = getDaysInMonth(year, month);
-      const activeCycles = getActiveCyclesForMonth(parseInt(year), parseInt(month));
-      
-      let csvContent = "\uFEFF";
-      
-      let row1 = ["成員姓名", "組別/主崗位"];
-      for (let d = 1; d <= daysCount; d++) row1.push(`${month}/${d}`);
-      row1.push("出勤天數", "OFF天數");
-      activeCycles.forEach(c => {
-        row1.push(`【${c.name}差額】`);
-        row1.push(`【${c.name}時數】`);
-      });
-      csvContent += row1.join(",") + "\r\n";
+      const mStr = month < 10 ? `0${month}` : `${month}`;
+      const activeCycles = getActiveCyclesForMonth(year, month);
 
-      let row2 = ["", ""];
-      for (let d = 1; d <= daysCount; d++) {
-        const weekDay = new Date(year, month - 1, d).getDay();
-        row2.push(weekDayNames[weekDay]);
+      let excelHtml = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+        <head>
+          <meta http-equiv="content-type" content="application/vnd.ms-excel; charset=UTF-8">
+          <style>
+            table { border-collapse: collapse; font-family: Calibri, "微軟正黑體", sans-serif; font-size: 11pt; }
+            th, td { border: 0.5pt solid #94a3b8; text-align: center; vertical-align: middle; padding: 4px 6px; white-space: nowrap; }
+            .th-header { background-color: #e2e8f0; font-weight: bold; }
+            .th-cycle-red { background-color: #ffe4e6; color: #9f1239; font-weight: bold; border: 1pt solid #f43f5e; }
+            .th-cycle-blue { background-color: #e0f2fe; color: #0369a1; font-weight: bold; border: 1pt solid #38bdf8; }
+            .weekend { background-color: #fee2e2; color: #991b1b; }
+            .national-holiday { background-color: #ffe4e6; color: #e11d48; font-weight: bold; }
+            .stat-header { background-color: #f1f5f9; font-weight: bold; }
+            .stat-val { font-weight: bold; }
+            .stat-off { color: #dc2626; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <table>
+      `;
+
+      // 列 1: 週期大表頭
+      excelHtml += `<tr><th colspan="2" class="th-header">${year}年${month}月 排班總表</th>`;
+      let curCycle = null;
+      let spanCount = 0;
+      for (let day = 1; day <= daysCount; day++) {
+        const dStr = day < 10 ? `0${day}` : `${day}`;
+        const dateKey = `${year}-${mStr}-${dStr}`;
+        const cycle = getCycleInfoForDate(dateKey);
+        if (day === 1) { curCycle = cycle; spanCount = 1; }
+        else if (cycle === curCycle) { spanCount++; }
+        else {
+          excelHtml += `<th colspan="${spanCount}" class="${curCycle ? (curCycle.color === 'red' ? 'th-cycle-red' : 'th-cycle-blue') : 'th-header'}">${curCycle ? curCycle.name + ' (' + curCycle.quota.split(' ')[0] + ')' : '-'}</th>`;
+          curCycle = cycle; spanCount = 1;
+        }
+        if (day === daysCount) {
+          excelHtml += `<th colspan="${spanCount}" class="${curCycle ? (curCycle.color === 'red' ? 'th-cycle-red' : 'th-cycle-blue') : 'th-header'}">${curCycle ? curCycle.name + ' (' + curCycle.quota.split(' ')[0] + ')' : '-'}</th>`;
+        }
       }
-      row2.push("", "");
-      activeCycles.forEach(() => {
-        row2.push("例/休/國");
-        row2.push("工時(現有/應到)");
-      });
-      csvContent += row2.join(",") + "\r\n";
+      excelHtml += `<th colspan="${2 + activeCycles.length * 2}" class="stat-header">出勤與週期檢核統計</th></tr>`;
 
+      // 列 2: 日期列
+      excelHtml += `<tr><th class="th-header">成員姓名</th><th class="th-header">組別/主崗位</th>`;
+      for (let day = 1; day <= daysCount; day++) {
+        const dStr = day < 10 ? `0${day}` : `${day}`;
+        const dateKey = `${year}-${mStr}-${dStr}`;
+        const dateObj = new Date(year, month - 1, day);
+        const weekDay = dateObj.getDay();
+        const isWeekend = (weekDay === 0 || weekDay === 6);
+        const holidayName = HOLIDAYS[dateKey] || null;
+        let cls = isWeekend ? "weekend" : "";
+        if (holidayName) cls = "national-holiday";
+        excelHtml += `<th class="${cls}">${day}${holidayName ? ' ('+holidayName+')' : ''}</th>`;
+      }
+      excelHtml += `<th class="stat-header">出勤天</th><th class="stat-header stat-off">OFF天</th>`;
+      activeCycles.forEach(c => {
+        excelHtml += `<th class="stat-header">【${c.name}差額】</th><th class="stat-header">【${c.name}時數】</th>`;
+      });
+      excelHtml += `</tr>`;
+
+      // 列 3: 星期列
+      excelHtml += `<tr><th class="th-header"></th><th class="th-header"></th>`;
+      for (let day = 1; day <= daysCount; day++) {
+        const dateObj = new Date(year, month - 1, day);
+        const weekDay = dateObj.getDay();
+        const isWeekend = (weekDay === 0 || weekDay === 6);
+        excelHtml += `<th class="${isWeekend ? 'weekend' : 'th-header'}">${weekDayNames[weekDay]}</th>`;
+      }
+      excelHtml += `<th class="stat-header">天</th><th class="stat-header stat-off">天</th>`;
+      activeCycles.forEach(() => {
+        excelHtml += `<th class="stat-header">例/休/國</th><th class="stat-header">工時(現/應)</th>`;
+      });
+      excelHtml += `</tr>`;
+
+      // 資料列: 人員排班明細 (僅純淨輸出班別代碼)
       const rows = document.querySelectorAll("#rosterBody tr");
       rows.forEach(r => {
-        let rowData = [];
+        excelHtml += `<tr>`;
         const name = r.querySelector(".col-name input").value;
         const group = r.querySelector(".col-group").textContent;
-        rowData.push(`"${name}"`, `"${group}"`);
+        excelHtml += `<td><strong>${name}</strong></td><td>${group}</td>`;
 
         const cells = r.querySelectorAll(".cell-box");
         cells.forEach(c => {
-          const pos = c.querySelector(".pos-label").textContent;
           const shift = c.querySelector(".shift-select").value;
-          rowData.push(`"${pos ? '['+pos+'] ' : ''}${shift}"`);
+          let cellStyle = "";
+          if (shift.startsWith("OFF") || shift.includes("休")) {
+            cellStyle = "color:#b91c1c; font-weight:bold; background-color:#fee2e2;";
+          }
+          const text = shift || '-';
+          excelHtml += `<td style="${cellStyle}">${text}</td>`;
         });
 
         const workDays = r.querySelector("[id^='workdays_']").textContent;
         const offDays = r.querySelector("[id^='offdays_']").textContent;
-        rowData.push(workDays, offDays);
+        excelHtml += `<td class="stat-val">${workDays}</td><td class="stat-off">${offDays}</td>`;
 
         activeCycles.forEach(c => {
           const mId = r.dataset.memberId;
           const defElem = document.getElementById(`cycle_deficit_${c.id}_${mId}`);
           const hourElem = document.getElementById(`cycle_hours_${c.id}_${mId}`);
-          rowData.push(`"${defElem ? defElem.textContent : '-'}"`);
-          rowData.push(`"${hourElem ? hourElem.textContent : '-'}"`);
+          excelHtml += `<td>${defElem ? defElem.textContent : '-'}</td><td>${hourElem ? hourElem.textContent : '-'}</td>`;
         });
-
-        csvContent += rowData.join(",") + "\r\n";
+        excelHtml += `</tr>`;
       });
 
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      excelHtml += `</table></body></html>`;
+
+      const blob = new Blob([excelHtml], { type: "application/vnd.ms-excel;charset=utf-8;" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.setAttribute("download", `${year}年${month}月_醫學影像排班與休假表.csv`);
+      link.setAttribute("download", `${year}年${month}月_醫學影像排班與休假表.xls`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
