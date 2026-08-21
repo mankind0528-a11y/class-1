@@ -272,8 +272,8 @@
       left: 95px;
       background-color: #f8fafc;
       z-index: 10;
-      width: 95px;
-      min-width: 95px;
+      width: 105px;
+      min-width: 105px;
       border-right: 2px solid #94a3b8 !important;
       font-size: 11px;
     }
@@ -281,6 +281,7 @@
     thead th.col-name, thead th.col-group {
       z-index: 35 !important;
       background-color: #cbd5e1 !important;
+      text-align: center;
     }
 
     .weekend { background-color: var(--weekend-bg) !important; color: var(--weekend-text); }
@@ -404,6 +405,73 @@
     .stat-cycle-ok { color: #15803d !important; font-weight: bold; }
     .total-row { background-color: #f1f5f9; font-weight: bold; }
 
+    /* 📊 輪值表頁面與子頁籤樣式 */
+    .rotation-view-container {
+      background: white;
+      padding: 20px;
+      border-radius: 0 0 8px 8px;
+      overflow: auto;
+      max-height: calc(100vh - 210px);
+    }
+    .sub-tab-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      border-bottom: 2px solid #cbd5e1;
+      padding-bottom: 8px;
+    }
+    .sub-tab-btn {
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: bold;
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #cbd5e1;
+      cursor: pointer;
+    }
+    .sub-tab-btn.active {
+      background: #1e3a8a;
+      color: white;
+      border-color: #1e3a8a;
+    }
+
+    .rotation-table {
+      min-width: 900px !important;
+      border: 2px solid #000;
+      margin: 0 auto 24px auto;
+    }
+    .rotation-table th, .rotation-table td {
+      border: 1px solid #000 !important;
+      padding: 6px 12px;
+      font-size: 13.5px;
+      font-weight: 500;
+      text-align: center;
+    }
+    .rotation-table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background-color: #fff;
+    }
+    .rot-header-blue {
+      background-color: #cce8ff !important;
+      color: #000;
+      font-weight: bold;
+    }
+    .rot-header-yellow {
+      background-color: #fef9c3 !important;
+      color: #854d0e;
+      font-weight: bold;
+    }
+    .rot-text-blue { color: #0000ff; font-weight: bold; }
+    .rot-current-week { background-color: #fef08a !important; font-weight: bold; }
+    .rot-cell-focused {
+      background-color: #dcfce7 !important;
+      color: #15803d !important;
+      font-weight: bold;
+    }
+
     /* 武功秘笈 Modal 彈窗樣式 */
     .modal-overlay {
       display: none;
@@ -485,9 +553,9 @@
       thead tr:nth-child(1) th { height: 34px; font-size: 13px; }
       thead tr:nth-child(2) th { height: 38px; font-size: 14px; }
       thead tr:nth-child(3) th { height: 28px; font-size: 13px; }
-      .col-name { width: 110px !important; min-width: 110px !important; font-size: 14px; }
-      .col-name input { font-size: 14px !important; padding: 4px 6px !important; width: 95px !important; }
-      .col-group { left: 110px !important; width: 120px !important; min-width: 120px !important; font-size: 13px !important; }
+      .col-name { width: 105px !important; min-width: 105px !important; font-size: 14px; }
+      .col-name input { font-size: 14px !important; padding: 4px 6px !important; width: 90px !important; }
+      .col-group { left: 105px !important; width: 120px !important; min-width: 120px !important; font-size: 13px !important; }
       .pos-label { font-size: 11px; padding: 2px 4px; }
       .shift-select { font-size: 13px; padding: 3px 2px; min-width: 82px; }
       .stat-col { min-width: 70px; font-size: 14px; }
@@ -534,6 +602,7 @@
     <div class="tab-bar">
       <button class="tab-btn active" id="tabRosterBtn" onclick="switchTab('roster')">📋 月排班表</button>
       <button class="tab-btn" id="tabLeaveBtn" onclick="switchTab('leave')">🏖️ 畫休假登記表</button>
+      <button class="tab-btn" id="tabRotationBtn" onclick="switchTab('rotation')">🔄 CT/MRI 輪序表</button>
     </div>
 
     <!-- 🏖️ 畫休假專用假別按鈕列 -->
@@ -547,6 +616,7 @@
     </div>
   </div>
 
+  <!-- 1. 月排班表 -->
   <div class="table-wrapper" id="rosterSection">
     <table>
       <thead>
@@ -567,6 +637,7 @@
     </table>
   </div>
 
+  <!-- 2. 畫休假登記表 -->
   <div class="table-wrapper" id="leaveSection" style="display: none;">
     <table>
       <thead>
@@ -591,6 +662,64 @@
         </tr>
       </tfoot>
     </table>
+  </div>
+
+  <!-- 3. CT/MRI 輪序表頁面 (含 MRI週輪值、CT週值班) -->
+  <div class="rotation-view-container" id="rotationSection" style="display: none;">
+    
+    <div class="sub-tab-bar">
+      <button class="sub-tab-btn active" id="subTabMriBtn" onclick="switchSubTab('mri')">🧲 MRI 每週輪值表</button>
+      <button class="sub-tab-btn" id="subTabCtDutyBtn" onclick="switchSubTab('ctDuty')">🛡️ CT 值班 (一線/二線) 每週輪替表</button>
+    </div>
+
+    <!-- 3-1. MRI 每週輪值總表（支援單一人員姓名過濾） -->
+    <div id="subSecMri">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <h3 style="margin: 0; color: var(--primary);">🧲 醫學影像 MRI 每週崗位輪值總表（2026 ~ 2029）</h3>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <label style="font-size: 13px; font-weight: bold; color: #1e3a8a;">👤 顯示人員：</label>
+            <select id="singleMemberSelect" onchange="renderMriRotationTable()" style="font-size: 13px; font-weight: bold; color: #1e3a8a; border: 1.5px solid #0284c7; padding: 4px 10px; border-radius: 6px; background: #fff; cursor: pointer;"></select>
+          </div>
+        </div>
+        <span style="font-size: 13px; color: #64748b;">選取同仁後整張表格僅顯示其個人姓名 ｜ 標黃底為當前週別</span>
+      </div>
+      <table class="rotation-table">
+        <thead>
+          <tr>
+            <th style="width: 70px;">週次</th>
+            <th style="width: 150px;">日期區間</th>
+            <th class="rot-text-blue">S</th>
+            <th class="rot-text-blue">小夜</th>
+            <th class="rot-header-blue rot-text-blue">六上班<br>on call 1.5</th>
+            <th class="rot-text-blue">3t</th>
+            <th class="rot-text-blue">小夜</th>
+            <th class="rot-text-blue">六上班<br>支援</th>
+          </tr>
+        </thead>
+        <tbody id="rotationTableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- 3-2. CT 值班每週輪替表 -->
+    <div id="subSecCtDuty" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+        <h3 style="margin: 0; color: var(--primary);">🛡️ CT 週末/夜間值班 (一線 / 二線) 4 週循環總表（2026 ~ 2029）</h3>
+        <span style="font-size: 13px; color: #64748b;">以 2026/08/03 為基準循環 ｜ 標黃底為當前週別</span>
+      </div>
+      <table class="rotation-table" style="max-width: 750px;">
+        <thead>
+          <tr>
+            <th style="width: 80px;">週次</th>
+            <th style="width: 180px;">日期區間</th>
+            <th class="rot-header-yellow" style="color: #854d0e;">CT 一線值班</th>
+            <th class="rot-header-blue" style="color: #0369a1;">CT 二線值班</th>
+          </tr>
+        </thead>
+        <tbody id="ctDutyTableBody"></tbody>
+      </table>
+    </div>
+
   </div>
 
   <!-- 📜 武功秘笈 Modal 視窗 -->
@@ -632,7 +761,7 @@
     const db = firebase.database();
 
     // -------------------------------------------------------------
-    // 🇹🇼 2026 行政院公告國定假日清單
+    // 🇹🇼 行政院公告國定假日清單 (支援至 2029)
     // -------------------------------------------------------------
     const HOLIDAYS = {
       "2026-01-01": "元旦",
@@ -725,7 +854,7 @@
       return { isOk: false, text: `差 ${parts.join('、')}` };
     }
 
-    // 基準設定
+    // 基準設定 (照圖表 2026/05/11 ~ 5/17 為基準循環第一週)
     const BASE_MRI_DATE = new Date(2026, 4, 11);
     const BASE_CT_YEAR = 2026;
     const BASE_CT_MONTH = 8;
@@ -744,10 +873,10 @@
     const CT_POS_CYCLE = ["RCT", "Angio", "256CT"];
 
     const CT_DUTY_CYCLES = [
-      { primary: "ct_yuting", secondary: "ct_zhewei" },
-      { primary: "ct_yutai", secondary: "sup_zhida" },
-      { primary: "ct_zhewei", secondary: "ct_yuting" },
-      { primary: "sup_zhida", secondary: "ct_yutai" }
+      { primary: "ct_yuting", secondary: "ct_zhewei", primaryName: "羅宇廷", secondaryName: "許哲維" },
+      { primary: "ct_yutai", secondary: "sup_zhida", primaryName: "劉宇泰", secondaryName: "魏志達" },
+      { primary: "ct_zhewei", secondary: "ct_yuting", primaryName: "許哲維", secondaryName: "羅宇廷" },
+      { primary: "sup_zhida", secondary: "ct_yutai", primaryName: "魏志達", secondaryName: "劉宇泰" }
     ];
 
     // 舊姓名轉新全名比對表（防止舊快取覆蓋）
@@ -799,7 +928,7 @@
     const currentYear = new Date().getFullYear();
     const currentMonth = new Date().getMonth() + 1;
 
-    for (let y = currentYear - 1; y <= currentYear + 3; y++) {
+    for (let y = 2025; y <= 2029; y++) {
       const opt = document.createElement("option");
       opt.value = y;
       opt.textContent = `${y} 年`;
@@ -877,22 +1006,224 @@
     function switchTab(tab) {
       const rosterSec = document.getElementById("rosterSection");
       const leaveSec = document.getElementById("leaveSection");
+      const rotationSec = document.getElementById("rotationSection");
+
       const tabRosterBtn = document.getElementById("tabRosterBtn");
       const tabLeaveBtn = document.getElementById("tabLeaveBtn");
+      const tabRotationBtn = document.getElementById("tabRotationBtn");
       const brushToolbar = document.getElementById("leaveBrushToolbar");
+
+      rosterSec.style.display = "none";
+      leaveSec.style.display = "none";
+      rotationSec.style.display = "none";
+      brushToolbar.style.display = "none";
+
+      tabRosterBtn.classList.remove("active");
+      tabLeaveBtn.classList.remove("active");
+      tabRotationBtn.classList.remove("active");
 
       if (tab === 'roster') {
         rosterSec.style.display = "block";
-        leaveSec.style.display = "none";
         tabRosterBtn.classList.add("active");
-        tabLeaveBtn.classList.remove("active");
-        brushToolbar.style.display = "none";
-      } else {
-        rosterSec.style.display = "none";
+      } else if (tab === 'leave') {
         leaveSec.style.display = "block";
         tabLeaveBtn.classList.add("active");
-        tabRosterBtn.classList.remove("active");
         brushToolbar.style.display = "flex";
+      } else if (tab === 'rotation') {
+        rotationSec.style.display = "block";
+        tabRotationBtn.classList.add("active");
+        renderAllRotationViews();
+      }
+    }
+
+    function switchSubTab(subTab) {
+      document.querySelectorAll(".sub-tab-btn").forEach(b => b.classList.remove("active"));
+      document.getElementById("subSecMri").style.display = "none";
+      document.getElementById("subSecCtDuty").style.display = "none";
+
+      if (subTab === 'mri') {
+        document.getElementById("subTabMriBtn").classList.add("active");
+        document.getElementById("subSecMri").style.display = "block";
+      } else if (subTab === 'ctDuty') {
+        document.getElementById("subTabCtDutyBtn").classList.add("active");
+        document.getElementById("subSecCtDuty").style.display = "block";
+      }
+    }
+
+    function initSingleMemberSelect() {
+      const select = document.getElementById("singleMemberSelect");
+      if (!select || select.options.length > 0) return;
+      
+      const year = parseInt(yearSelect.value);
+      const month = parseInt(monthSelect.value);
+      const savedData = JSON.parse(localStorage.getItem(`team_roster_${year}_${month}`) || "{}");
+
+      const allOpt = document.createElement("option");
+      allOpt.value = "ALL";
+      allOpt.textContent = "👥 全員名單 (完整呈現)";
+      select.appendChild(allOpt);
+
+      teamMembers.filter(m => m.type === "MRI").forEach(m => {
+        const opt = document.createElement("option");
+        opt.value = m.name;
+        opt.textContent = `👤 ${getCleanMemberName(m, savedData)}`;
+        select.appendChild(opt);
+      });
+    }
+
+    function renderAllRotationViews() {
+      initSingleMemberSelect();
+      renderMriRotationTable();
+      renderCtDutyRotationTable();
+    }
+
+    // 1. 依據 OpenOffice 圖表演算生成 MRI 輪值表 (2026 ~ 2029) ＋ 單一成員姓名過濾
+    function renderMriRotationTable() {
+      const tbody = document.getElementById("rotationTableBody");
+      const select = document.getElementById("singleMemberSelect");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+
+      const filterName = select ? select.value : "ALL";
+
+      const startMonday = new Date(2026, 4, 11); // 2026/05/11
+      const endSunday = new Date(2029, 11, 31);  // 2029/12/31
+      
+      const now = new Date();
+      const currentMonday = new Date(now);
+      const curDay = now.getDay();
+      const diffToMonday = (curDay === 0 ? -6 : 1) - curDay;
+      currentMonday.setDate(now.getDate() + diffToMonday);
+      currentMonday.setHours(0,0,0,0);
+
+      let curMonday = new Date(startMonday);
+      let weekNum = 3;
+
+      const namesList = ["彭及禎", "張任翔", "林暉筌", "賴佳琪", "詹忠憲", "李軒緯"];
+
+      while (curMonday <= endSunday) {
+        const curSun = new Date(curMonday);
+        curSun.setDate(curMonday.getDate() + 6);
+
+        const m1 = curMonday.getMonth() + 1;
+        const d1 = curMonday.getDate();
+        const m2 = curSun.getMonth() + 1;
+        const d2 = curSun.getDate();
+        const y1 = curMonday.getFullYear();
+
+        const dateRangeStr = `${y1 === 2026 ? (weekNum === 3 ? '2026 ' : '') : y1 + ' '}${m1}/${d1}~${m2}/${d2}`;
+
+        const diffTime = curMonday.getTime() - BASE_MRI_DATE.getTime();
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+        const weekOffset = Math.floor(diffDays / 7);
+
+        const roles = [];
+        for (let r = 0; r < 6; r++) {
+          const personIdx = ((r - weekOffset) % 6 + 6) % 6;
+          roles.push(namesList[personIdx]);
+        }
+
+        const tr = document.createElement("tr");
+        if (curMonday.getTime() === currentMonday.getTime()) {
+          tr.className = "rot-current-week";
+        }
+
+        const tdIdx = document.createElement("td");
+        tdIdx.textContent = weekNum;
+        tr.appendChild(tdIdx);
+
+        const tdRange = document.createElement("td");
+        tdRange.textContent = dateRangeStr;
+        tdRange.style.fontWeight = "bold";
+        tr.appendChild(tdRange);
+
+        roles.forEach((personName) => {
+          const td = document.createElement("td");
+          if (filterName === "ALL") {
+            td.textContent = personName;
+          } else {
+            if (personName === filterName) {
+              td.textContent = personName;
+              td.className = "rot-cell-focused";
+            } else {
+              td.textContent = "-";
+              td.style.color = "#cbd5e1";
+            }
+          }
+          tr.appendChild(td);
+        });
+
+        tbody.appendChild(tr);
+
+        curMonday.setDate(curMonday.getDate() + 7);
+        weekNum++;
+      }
+    }
+
+    // 2. CT 每週值班（一線/二線）輪替表 (2026 ~ 2029)
+    function renderCtDutyRotationTable() {
+      const tbody = document.getElementById("ctDutyTableBody");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+
+      const startMonday = new Date(2026, 7, 3); // 2026/08/03 (基準週循環第1週)
+      const endSunday = new Date(2029, 11, 31);
+
+      const now = new Date();
+      const currentMonday = new Date(now);
+      const curDay = now.getDay();
+      const diffToMonday = (curDay === 0 ? -6 : 1) - curDay;
+      currentMonday.setDate(now.getDate() + diffToMonday);
+      currentMonday.setHours(0,0,0,0);
+
+      let curMonday = new Date(startMonday);
+      let weekNum = 1;
+
+      while (curMonday <= endSunday) {
+        const curSun = new Date(curMonday);
+        curSun.setDate(curMonday.getDate() + 6);
+
+        const m1 = curMonday.getMonth() + 1;
+        const d1 = curMonday.getDate();
+        const m2 = curSun.getMonth() + 1;
+        const d2 = curSun.getDate();
+        const y1 = curMonday.getFullYear();
+
+        const dateRangeStr = `${y1} ${m1}/${d1} ~ ${m2}/${d2}`;
+
+        const dutyIdx = getCtDutyWeekIndex(curMonday);
+        const duty = CT_DUTY_CYCLES[dutyIdx];
+
+        const tr = document.createElement("tr");
+        if (curMonday.getTime() === currentMonday.getTime()) {
+          tr.className = "rot-current-week";
+        }
+
+        const tdIdx = document.createElement("td");
+        tdIdx.textContent = `第 ${weekNum} 週`;
+        tr.appendChild(tdIdx);
+
+        const tdRange = document.createElement("td");
+        tdRange.textContent = dateRangeStr;
+        tdRange.style.fontWeight = "bold";
+        tr.appendChild(tdRange);
+
+        const tdP = document.createElement("td");
+        tdP.textContent = `${duty.primaryName} (一線)`;
+        tdP.style.fontWeight = "bold";
+        tdP.style.color = "#854d0e";
+        tr.appendChild(tdP);
+
+        const tdS = document.createElement("td");
+        tdS.textContent = `${duty.secondaryName} (二線)`;
+        tdS.style.fontWeight = "bold";
+        tdS.style.color = "#0369a1";
+        tr.appendChild(tdS);
+
+        tbody.appendChild(tr);
+
+        curMonday.setDate(curMonday.getDate() + 7);
+        weekNum++;
       }
     }
 
@@ -903,6 +1234,7 @@
       renderCycleInfo();
       listenToFirebaseData();
       listenToRulesData();
+      renderAllRotationViews();
     }
 
     function renderCycleInfo() {
@@ -1197,7 +1529,7 @@
         tdName.className = "col-name";
         const nameInput = document.createElement("input");
         nameInput.value = getCleanMemberName(m, savedData);
-        nameInput.style.width = "95px";
+        nameInput.style.width = "90px";
         nameInput.onchange = () => { saveData(); renderLeaveBody(); };
         tdName.appendChild(nameInput);
         tr.appendChild(tdName);
@@ -1757,7 +2089,6 @@
             const val = select.value;
             const isOffShift = val.startsWith("OFF") || val === "C8C8C24(休)" || val === "C8C8C24";
 
-            // 當班別為 OFF 假別或 C8C8C24(休) 時，計入休假天數統計
             if (isOffShift) {
               offCount++;
               activeCycles.forEach(c => {
@@ -1770,7 +2101,6 @@
                 }
               });
             } else if (val !== "") {
-              // 只有非休假出勤班別才計入上班天數與每班 +8 小時工時
               workCount++;
               activeCycles.forEach(c => {
                 if (dateKey >= c.start && dateKey <= c.end) {
@@ -1901,7 +2231,7 @@
 3. 支援組（1人固定）：魏志達（固定支援一，配合 CT 一/二線值班輪替）
 
 二、 崗位輪值機制
-1. MRI 週輪值崗位順序（以 2026/05/11 基準週循環）：
+1. MRI 週輪值崗位順序（以 2026/05/11 基準週循環，已照表規劃至 2029）：
    - 1.5S (8C16C08)
    - 1.5S小夜 (15C23C8)
    - 1.5T (8-4C4-8) ➜ 週六 8-4C4-8、週日 C8C8C24(休)（值班底色：黃底）
