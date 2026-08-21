@@ -44,13 +44,14 @@
     }
     body {
       margin: 0;
-      padding: 16px;
+      padding: 12px;
       background-color: var(--bg-color);
       color: #0f172a;
+      -webkit-text-size-adjust: 100%;
     }
     .header-panel {
       background: white;
-      padding: 14px 20px;
+      padding: 14px 16px;
       border-radius: 8px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
       margin-bottom: 8px;
@@ -62,12 +63,12 @@
     }
     .title-area h1 {
       margin: 0;
-      font-size: 1.3rem;
+      font-size: 1.25rem;
       color: var(--primary);
     }
     .rule-badges {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       margin-top: 4px;
       flex-wrap: wrap;
     }
@@ -91,14 +92,14 @@
       background: #ffffff;
       border: 1.5px solid #cbd5e1;
       color: #334155;
-      padding: 8px 16px;
+      padding: 8px 14px;
       border-radius: 6px;
-      margin-bottom: 12px;
-      font-size: 13px;
+      margin-bottom: 10px;
+      font-size: 12px;
       font-weight: 600;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 8px;
       flex-wrap: wrap;
       box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
@@ -106,14 +107,14 @@
       background: #fff1f2;
       border: 1px solid #f43f5e;
       color: #9f1239;
-      padding: 3px 8px;
+      padding: 2px 6px;
       border-radius: 4px;
     }
     .cycle-item-blue {
       background: #f0f9ff;
       border: 1px solid #38bdf8;
       color: #0369a1;
-      padding: 3px 8px;
+      padding: 2px 6px;
       border-radius: 4px;
     }
     
@@ -121,13 +122,13 @@
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
     select, button, input {
-      padding: 6px 10px;
+      padding: 5px 8px;
       border: 1px solid var(--border-color);
       border-radius: 6px;
-      font-size: 13px;
+      font-size: 12px;
     }
     button {
       background-color: var(--primary);
@@ -143,7 +144,7 @@
     .btn-auto { background-color: #4338ca; font-weight: 600; }
     .btn-export { background-color: #059669; }
     .btn-secret { background-color: #d97706; font-weight: bold; }
-    .btn-nav { background-color: #475569; padding: 6px 12px; }
+    .btn-nav { background-color: #475569; padding: 5px 10px; }
 
     /* 分頁頁籤與畫休工具列 */
     .tab-bar-container {
@@ -151,7 +152,7 @@
       justify-content: space-between;
       align-items: flex-end;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 6px;
       border-bottom: 2px solid var(--primary);
       margin-bottom: -1px;
     }
@@ -160,7 +161,7 @@
       gap: 4px;
     }
     .tab-btn {
-      padding: 10px 20px;
+      padding: 8px 14px;
       background: #e2e8f0;
       color: #475569;
       border: 1px solid var(--border-color);
@@ -168,7 +169,7 @@
       border-radius: 8px 8px 0 0;
       font-weight: 600;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 13px;
     }
     .tab-btn.active {
       background: var(--primary);
@@ -180,7 +181,7 @@
     .leave-brush-toolbar {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
       padding-bottom: 6px;
       flex-wrap: wrap;
     }
@@ -190,9 +191,9 @@
       color: #334155;
     }
     .brush-btn {
-      padding: 5px 12px;
+      padding: 4px 10px;
       border-radius: 20px;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: bold;
       cursor: pointer;
       border: 2px solid transparent;
@@ -216,6 +217,7 @@
       overflow: auto;
       border: 1px solid var(--border-color);
       max-height: calc(100vh - 210px);
+      -webkit-overflow-scrolling: touch;
     }
     table {
       border-collapse: separate;
@@ -405,25 +407,27 @@
     .stat-cycle-ok { color: #15803d !important; font-weight: bold; }
     .total-row { background-color: #f1f5f9; font-weight: bold; }
 
-    /* 📊 輪值表頁面與子頁籤樣式 */
+    /* 📊 輪值表頁面與手機端凍結設定 */
     .rotation-view-container {
       background: white;
-      padding: 20px;
+      padding: 12px;
       border-radius: 0 0 8px 8px;
       overflow: auto;
-      max-height: calc(100vh - 210px);
+      max-height: calc(100vh - 190px);
+      -webkit-overflow-scrolling: touch;
     }
     .sub-tab-bar {
       display: flex;
-      gap: 8px;
-      margin-bottom: 16px;
+      gap: 6px;
+      margin-bottom: 12px;
       border-bottom: 2px solid #cbd5e1;
-      padding-bottom: 8px;
+      padding-bottom: 6px;
+      flex-wrap: wrap;
     }
     .sub-tab-btn {
-      padding: 6px 16px;
+      padding: 6px 14px;
       border-radius: 20px;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: bold;
       background: #f1f5f9;
       color: #475569;
@@ -437,23 +441,54 @@
     }
 
     .rotation-table {
-      min-width: 900px !important;
+      min-width: 820px !important;
+      border-collapse: separate;
+      border-spacing: 0;
       border: 2px solid #000;
       margin: 0 auto 24px auto;
     }
     .rotation-table th, .rotation-table td {
-      border: 1px solid #000 !important;
-      padding: 6px 12px;
-      font-size: 13.5px;
+      border-right: 1px solid #000 !important;
+      border-bottom: 1px solid #000 !important;
+      padding: 6px 8px;
+      font-size: 13px;
       font-weight: 500;
       text-align: center;
+      white-space: nowrap;
     }
+    
+    /* 🧊 輪值表表頭垂直置頂 */
     .rotation-table thead th {
       position: sticky;
       top: 0;
-      z-index: 10;
-      background-color: #fff;
+      z-index: 20;
+      background-color: #f8fafc;
     }
+
+    /* 🧊 輪值表手機端欄位水平凍結 (週次 + 日期) */
+    .rot-col-sticky-1 {
+      position: sticky;
+      left: 0;
+      z-index: 15;
+      background-color: #f8fafc !important;
+      width: 55px;
+      min-width: 55px;
+      border-right: 1px solid #000 !important;
+    }
+    .rot-col-sticky-2 {
+      position: sticky;
+      left: 55px;
+      z-index: 15;
+      background-color: #f8fafc !important;
+      width: 120px;
+      min-width: 120px;
+      border-right: 2px solid #000 !important;
+    }
+    thead th.rot-col-sticky-1, thead th.rot-col-sticky-2 {
+      z-index: 30 !important;
+      background-color: #e2e8f0 !important;
+    }
+
     .rot-header-blue {
       background-color: #cce8ff !important;
       color: #000;
@@ -465,7 +500,7 @@
       font-weight: bold;
     }
     .rot-text-blue { color: #0000ff; font-weight: bold; }
-    .rot-current-week { background-color: #fef08a !important; font-weight: bold; }
+    .rot-current-week td { background-color: #fef08a !important; font-weight: bold; }
     .rot-cell-focused {
       background-color: #dcfce7 !important;
       color: #15803d !important;
@@ -562,6 +597,9 @@
       .stat-cycle-deficit, .stat-cycle-hours { min-width: 135px; font-size: 12px; }
       .holiday-tag { font-size: 10px; }
       .leave-cell { height: 42px; font-size: 14px; }
+      .rotation-table { min-width: 900px !important; }
+      .rot-col-sticky-1 { width: 70px; min-width: 70px; }
+      .rot-col-sticky-2 { left: 70px; width: 145px; min-width: 145px; }
     }
   </style>
 </head>
@@ -664,7 +702,7 @@
     </table>
   </div>
 
-  <!-- 3. CT/MRI 輪序表頁面 (含 MRI週輪值、CT週值班) -->
+  <!-- 3. CT/MRI 輪序表頁面 (含 MRI週輪值、CT週值班，已加入手機端凍結優化) -->
   <div class="rotation-view-container" id="rotationSection" style="display: none;">
     
     <div class="sub-tab-bar">
@@ -672,23 +710,23 @@
       <button class="sub-tab-btn" id="subTabCtDutyBtn" onclick="switchSubTab('ctDuty')">🛡️ CT 值班 (一線/二線) 每週輪替表</button>
     </div>
 
-    <!-- 3-1. MRI 每週輪值總表（支援單一人員姓名過濾） -->
+    <!-- 3-1. MRI 每週輪值總表 -->
     <div id="subSecMri">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <h3 style="margin: 0; color: var(--primary);">🧲 醫學影像 MRI 每週崗位輪值總表（2026 ~ 2029）</h3>
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-size: 13px; font-weight: bold; color: #1e3a8a;">👤 顯示人員：</label>
-            <select id="singleMemberSelect" onchange="renderMriRotationTable()" style="font-size: 13px; font-weight: bold; color: #1e3a8a; border: 1.5px solid #0284c7; padding: 4px 10px; border-radius: 6px; background: #fff; cursor: pointer;"></select>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <h3 style="margin: 0; color: var(--primary); font-size: 1.1rem;">🧲 MRI 每週崗位輪值總表（2026 ~ 2029）</h3>
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <label style="font-size: 12px; font-weight: bold; color: #1e3a8a;">👤 顯示人員：</label>
+            <select id="singleMemberSelect" onchange="renderMriRotationTable()" style="font-size: 12px; font-weight: bold; color: #1e3a8a; border: 1.5px solid #0284c7; padding: 3px 8px; border-radius: 6px; background: #fff; cursor: pointer;"></select>
           </div>
         </div>
-        <span style="font-size: 13px; color: #64748b;">選取同仁後整張表格僅顯示其個人姓名 ｜ 標黃底為當前週別</span>
+        <span style="font-size: 12px; color: #64748b;">👈 手機可左右滑動 ｜ 前兩欄已鎖定</span>
       </div>
       <table class="rotation-table">
         <thead>
           <tr>
-            <th style="width: 70px;">週次</th>
-            <th style="width: 150px;">日期區間</th>
+            <th class="rot-col-sticky-1">週次</th>
+            <th class="rot-col-sticky-2">日期區間</th>
             <th class="rot-text-blue">S</th>
             <th class="rot-text-blue">小夜</th>
             <th class="rot-header-blue rot-text-blue">六上班<br>on call 1.5</th>
@@ -703,15 +741,15 @@
 
     <!-- 3-2. CT 值班每週輪替表 -->
     <div id="subSecCtDuty" style="display: none;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
-        <h3 style="margin: 0; color: var(--primary);">🛡️ CT 週末/夜間值班 (一線 / 二線) 4 週循環總表（2026 ~ 2029）</h3>
-        <span style="font-size: 13px; color: #64748b;">以 2026/08/03 為基準循環 ｜ 標黃底為當前週別</span>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+        <h3 style="margin: 0; color: var(--primary); font-size: 1.1rem;">🛡️ CT 週末/夜間值班 (一線 / 二線) 4 週循環總表</h3>
+        <span style="font-size: 12px; color: #64748b;">👈 手機可左右滑動 ｜ 前兩欄已鎖定</span>
       </div>
       <table class="rotation-table" style="max-width: 750px;">
         <thead>
           <tr>
-            <th style="width: 80px;">週次</th>
-            <th style="width: 180px;">日期區間</th>
+            <th class="rot-col-sticky-1">週次</th>
+            <th class="rot-col-sticky-2">日期區間</th>
             <th class="rot-header-yellow" style="color: #854d0e;">CT 一線值班</th>
             <th class="rot-header-blue" style="color: #0369a1;">CT 二線值班</th>
           </tr>
@@ -1060,7 +1098,7 @@
 
       const allOpt = document.createElement("option");
       allOpt.value = "ALL";
-      allOpt.textContent = "👥 全員名單 (完整呈現)";
+      allOpt.textContent = "👥 全員名單 (全部顯示)";
       select.appendChild(allOpt);
 
       teamMembers.filter(m => m.type === "MRI").forEach(m => {
@@ -1129,10 +1167,12 @@
         }
 
         const tdIdx = document.createElement("td");
+        tdIdx.className = "rot-col-sticky-1";
         tdIdx.textContent = weekNum;
         tr.appendChild(tdIdx);
 
         const tdRange = document.createElement("td");
+        tdRange.className = "rot-col-sticky-2";
         tdRange.textContent = dateRangeStr;
         tdRange.style.fontWeight = "bold";
         tr.appendChild(tdRange);
@@ -1200,10 +1240,12 @@
         }
 
         const tdIdx = document.createElement("td");
+        tdIdx.className = "rot-col-sticky-1";
         tdIdx.textContent = `第 ${weekNum} 週`;
         tr.appendChild(tdIdx);
 
         const tdRange = document.createElement("td");
+        tdRange.className = "rot-col-sticky-2";
         tdRange.textContent = dateRangeStr;
         tdRange.style.fontWeight = "bold";
         tr.appendChild(tdRange);
