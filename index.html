@@ -700,7 +700,7 @@
     </table>
   </div>
 
-  <!-- 3. CT/MRI 輪序表頁面 (含 MRI週輪值、CT週值班，已加入手機端凍結優化) -->
+  <!-- 3. CT/MRI 輪序表頁面 -->
   <div class="rotation-view-container" id="rotationSection" style="display: none;">
     
     <div class="sub-tab-bar">
@@ -740,7 +740,7 @@
     <!-- 3-2. CT 值班每週輪替表 -->
     <div id="subSecCtDuty" style="display: none;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
-        <h3 style="margin: 0; color: var(--primary); font-size: 1.1rem;">🛡️ CT 週末/夜間值班 (一線 / 二線) 4 週循環總表</h3>
+        <h3 style="margin: 0; color: var(--primary); font-size: 1.1rem;">🛡️ CT 週末/夜間值班 (一線 / 二線) 輪替總表</h3>
         <span style="font-size: 12px; color: #64748b;">👈 手機可左右滑動 ｜ 前兩欄已鎖定</span>
       </div>
       <table class="rotation-table" style="max-width: 750px;">
@@ -894,7 +894,7 @@
     const BASE_MRI_DATE = new Date(2026, 4, 11);
     const BASE_CT_YEAR = 2026;
     const BASE_CT_MONTH = 8;
-    const BASE_CT_DUTY_DATE = new Date(2026, 7, 3);
+    const BASE_CT_DUTY_DATE = new Date(2026, 7, 3); // 2026/08/03 第 1 週
 
     const MRI_MEMBERS = ["彭及禎", "張任翔", "林暉筌", "賴佳琪", "詹忠憲", "李軒緯"];
     const MRI_WEEK_ROLES = [
@@ -908,12 +908,43 @@
 
     const CT_POS_CYCLE = ["RCT", "Angio", "256CT"];
 
+    // 🛡️ CT 常態 4 人 4 週循環（原本順序完全維持不變）
     const CT_DUTY_CYCLES = [
       { primary: "ct_yuting", secondary: "ct_zhewei", primaryName: "羅宇廷", secondaryName: "許哲維" },
       { primary: "ct_yutai", secondary: "sup_zhida", primaryName: "劉宇泰", secondaryName: "魏志達" },
       { primary: "ct_zhewei", secondary: "ct_yuting", primaryName: "許哲維", secondaryName: "羅宇廷" },
       { primary: "sup_zhida", secondary: "ct_yutai", primaryName: "魏志達", secondaryName: "劉宇泰" }
     ];
+
+    // 動態計算 CT 值班（第 4 週開始，每隔 4 週即第 4, 9, 14, 19... 週二線指定為嘉豪）
+    function getCtDutyForDate(dateObj) {
+      const day = dateObj.getDay();
+      const diffToMonday = (day === 0 ? -6 : 1) - day;
+      const monday = new Date(dateObj);
+      monday.setDate(dateObj.getDate() + diffToMonday);
+      monday.setHours(0, 0, 0, 0);
+
+      const diffTime = monday.getTime() - BASE_CT_DUTY_DATE.getTime();
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+      const weekNum = Math.floor(diffDays / 7) + 1; // 2026/08/03 為第 1 週
+
+      const dutyIdx = ((weekNum - 1) % 4 + 4) % 4;
+      const baseDuty = CT_DUTY_CYCLES[dutyIdx];
+
+      // 第 4 週 (8/24~8/30)，間隔 4 週後為第 9 週、第 14 週...
+      const isJiahaoWeek = ((weekNum - 4) % 5 === 0 && weekNum >= 4);
+
+      if (isJiahaoWeek) {
+        return {
+          primary: baseDuty.primary,
+          primaryName: baseDuty.primaryName,
+          secondary: "ct_jiahao",
+          secondaryName: "嘉豪"
+        };
+      }
+
+      return baseDuty;
+    }
 
     // 舊姓名轉新全名比對表（防止舊快取覆蓋）
     const OLD_TO_NEW_NAMES = {
@@ -995,19 +1026,6 @@
       const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
       const weekIndex = Math.floor(diffDays / 7);
       return ((weekIndex % 6) + 6) % 6;
-    }
-
-    function getCtDutyWeekIndex(dateObj) {
-      const day = dateObj.getDay();
-      const diffToMonday = (day === 0 ? -6 : 1) - day;
-      const monday = new Date(dateObj);
-      monday.setDate(dateObj.getDate() + diffToMonday);
-      monday.setHours(0, 0, 0, 0);
-
-      const diffTime = monday.getTime() - BASE_CT_DUTY_DATE.getTime();
-      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-      const weekIndex = Math.floor(diffDays / 7);
-      return ((weekIndex % 4) + 4) % 4;
     }
 
     function getCtMonthlyPosition(member, year, month) {
@@ -1113,7 +1131,6 @@
       renderCtDutyRotationTable();
     }
 
-    // 1. 依據 OpenOffice 圖表演算生成 MRI 輪值表 (2026 ~ 2029) ＋ 單一成員姓名過濾
     function renderMriRotationTable() {
       const tbody = document.getElementById("rotationTableBody");
       const select = document.getElementById("singleMemberSelect");
@@ -1122,8 +1139,8 @@
 
       const filterName = select ? select.value : "ALL";
 
-      const startMonday = new Date(2026, 4, 11); // 2026/05/11
-      const endSunday = new Date(2029, 11, 31);  // 2029/12/31
+      const startMonday = new Date(2026, 4, 11);
+      const endSunday = new Date(2029, 11, 31);
       
       const now = new Date();
       const currentMonday = new Date(now);
@@ -1198,13 +1215,13 @@
       }
     }
 
-    // 2. CT 每週值班（一線/二線）輪替表 (2026 ~ 2029)
+    // 2. CT 每週值班（一線/二線）輪替總表
     function renderCtDutyRotationTable() {
       const tbody = document.getElementById("ctDutyTableBody");
       if (!tbody) return;
       tbody.innerHTML = "";
 
-      const startMonday = new Date(2026, 7, 3); // 2026/08/03 (基準週循環第1週)
+      const startMonday = new Date(2026, 7, 3); // 2026/08/03 (基準週第1週)
       const endSunday = new Date(2029, 11, 31);
 
       const now = new Date();
@@ -1228,9 +1245,7 @@
         const y1 = curMonday.getFullYear();
 
         const dateRangeStr = `${y1} ${m1}/${d1} ~ ${m2}/${d2}`;
-
-        const dutyIdx = getCtDutyWeekIndex(curMonday);
-        const duty = CT_DUTY_CYCLES[dutyIdx];
+        const duty = getCtDutyForDate(curMonday);
 
         const tr = document.createElement("tr");
         if (curMonday.getTime() === currentMonday.getTime()) {
@@ -1920,8 +1935,7 @@
         const sup1Td = document.getElementById(`r_td_${sup1Member.id}_${day}`);
 
         if (sup1Sel && !sup1Sel.value.startsWith("OFF")) {
-          const dutyIdx = getCtDutyWeekIndex(dateObj);
-          const duty = CT_DUTY_CYCLES[dutyIdx];
+          const duty = getCtDutyForDate(dateObj);
           const isPrimary = (duty.primary === "sup_zhida");
           const isSecondary = (duty.secondary === "sup_zhida");
 
@@ -2009,8 +2023,7 @@
                 }
               }
             } else {
-              const dutyIdx = getCtDutyWeekIndex(dateObj);
-              const duty = CT_DUTY_CYCLES[dutyIdx];
+              const duty = getCtDutyForDate(dateObj);
               const isPrimary = (duty.primary === tm.id);
               const isSecondary = (duty.secondary === tm.id);
 
@@ -2280,11 +2293,13 @@
    - 支援二 (8H17C08) ➜ 週六支援 8-4C4-8
 2. CT 月輪值崗位順序（以 2026/08 基準月循環）：
    - RCT ➜ Angio ➜ 256CT
-3. CT 週末/夜間值班 4 週輪替（以 2026/08/03 基準週循環）：
-   - 第1週：羅宇廷(一線) / 許哲維(二線)
-   - 第2週：劉宇泰(一線) / 魏志達(二線)
-   - 第3週：許哲維(一線) / 羅宇廷(二線)
-   - 第4週：魏志達(一線) / 劉宇泰(二線)
+3. CT 週末/夜間值班輪替（以 2026/08/03 為第 1 週起算）：
+   - 原 4 週常態輪替：
+     - 羅宇廷(一線) / 許哲維(二線)
+     - 劉宇泰(一線) / 魏志達(二線)
+     - 許哲維(一線) / 羅宇廷(二線)
+     - 魏志達(一線) / 劉宇泰(二線)
+   - 嘉豪二線值班規則：自第 4 週 (8/24~8/30) 起，每間隔 4 週（即第 4、9、14、19... 週）二線自動切換由嘉豪值班。
 
 三、 代班與畫休連動規則
 1. MRI 平日請假：當值「支援二」的人員自動代班該請假人員之崗位與班別（標示「代:崗位」）。
@@ -2347,7 +2362,7 @@
       });
     }
 
-    // 📊 升級版 Excel 匯出 (僅匯出姓名、組別與每日班別，不含後方統計)
+    // 📊 升級版 Excel 匯出
     function exportToExcel() {
       const year = parseInt(yearSelect.value);
       const month = parseInt(monthSelect.value);
@@ -2372,7 +2387,6 @@
           <table>
       `;
 
-      // 列 1: 週期大表頭
       excelHtml += `<tr><th colspan="2" class="th-header">${year}年${month}月 排班表</th>`;
       let curCycle = null;
       let spanCount = 0;
@@ -2392,7 +2406,6 @@
       }
       excelHtml += `</tr>`;
 
-      // 列 2: 日期列
       excelHtml += `<tr><th class="th-header">成員姓名</th><th class="th-header">組別/主崗位</th>`;
       for (let day = 1; day <= daysCount; day++) {
         const dStr = day < 10 ? `0${day}` : `${day}`;
@@ -2407,7 +2420,6 @@
       }
       excelHtml += `</tr>`;
 
-      // 列 3: 星期列
       excelHtml += `<tr><th class="th-header"></th><th class="th-header"></th>`;
       for (let day = 1; day <= daysCount; day++) {
         const dateObj = new Date(year, month - 1, day);
@@ -2417,7 +2429,6 @@
       }
       excelHtml += `</tr>`;
 
-      // 資料列: 人員排班明細 (僅純淨輸出班別代碼)
       const rows = document.querySelectorAll("#rosterBody tr");
       rows.forEach(r => {
         excelHtml += `<tr>`;
